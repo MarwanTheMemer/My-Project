@@ -272,6 +272,7 @@ let gameLoop = null;
 let virusLoop = null;
 let helperShootLoop = null;
 let helperMoveIntervals = []; // Added for helper movement intervals
+let spawnMultipleViruses = true;
 
 function createPlayer() {
   player = document.createElement('div');
@@ -309,6 +310,16 @@ function createVirus() {
   virus.style.top = '0px'; // Changed from -50px to 0px
   gameContainer.appendChild(virus);
   viruses.push(virus);
+}
+
+function spawnViruses() {
+  if (spawnMultipleViruses) {
+    for (let i = 0; i < 5; i++) {
+      createVirus();
+    }
+  } else {
+    createVirus();
+  }
 }
 
 function shoot(x, y) {
@@ -417,77 +428,4 @@ function updateGame() {
         gameContainer.removeChild(bullet);
         viruses.splice(virusIndex, 1);
         bullets.splice(bulletIndex, 1);
-        score += 10;
-        coins += 10;
-        scoreElement.textContent = score;
-        coinsElement.textContent = coins;
-      }
-    });
-  });
-}
-
-function gameOver() {
-  gameActive = false;
-  gameOverElement.style.display = 'block';
-  clearInterval(gameLoop);
-  clearInterval(virusLoop);
-  clearInterval(helperShootLoop);
-  helperMoveIntervals.forEach(interval => clearInterval(interval)); // Clear helper movement intervals
-}
-
-function startGame() {
-  score = 0;
-  health = 100;
-  coins = 0;
-  viruses.forEach(virus => gameContainer.removeChild(virus));
-  bullets.forEach(bullet => gameContainer.removeChild(bullet));
-  helpers.forEach(helper => gameContainer.removeChild(helper));
-  viruses = [];
-  bullets = [];
-  helpers = [];
-  scoreElement.textContent = '0';
-  coinsElement.textContent = '0';
-  healthElement.textContent = '100';
-  gameOverElement.style.display = 'none';
-  shopModal.style.display = 'none';
-  
-  // Clear existing helper movement intervals
-  helperMoveIntervals.forEach(interval => clearInterval(interval));
-  helperMoveIntervals = [];
-  
-  if (player) {
-    gameContainer.removeChild(player);
-  }
-  
-  createPlayer();
-  gameActive = true;
-  startScreen.style.display = 'none';
-  
-  gameLoop = setInterval(updateGame, 1000/60);
-  virusLoop = setInterval(createVirus, 3000); // Increased from 2000ms to 3000ms
-  helperShootLoop = setInterval(helperShoot, 1000);
-}
-
-document.addEventListener('mousemove', (e) => {
-  if (!gameActive) return;
-  const containerRect = gameContainer.getBoundingClientRect();
-  const x = e.clientX - containerRect.left;
-  if (x >= 0 && x <= gameContainer.offsetWidth - 60) {
-    player.style.left = x + 'px';
-    // Keep vertical position fixed at bottom
-    player.style.top = (gameContainer.offsetHeight - 80) + 'px';
-  }
-});
-
-document.addEventListener('click', (e) => {
-  if (!gameActive || e.target === startButton || e.target === retryButton) return;
-  const playerRect = player.getBoundingClientRect();
-  shoot(playerRect.left - gameContainer.getBoundingClientRect().left, playerRect.top - gameContainer.getBoundingClientRect().top);
-});
-
-startButton.addEventListener('click', startGame);
-retryButton.addEventListener('click', startGame);
-shopButton.addEventListener('click', openShop);
-buyHelperButton.addEventListener('click', buyHelper);
-</script>
-</body></html>
+        score += 
