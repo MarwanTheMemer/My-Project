@@ -1,493 +1,132 @@
-<html><head><base href="/" charset="UTF-8"><title>معركة الفيروسات!</title>
-<style>
-  body {
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: #000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Cg fill='white' fill-opacity='0.3'%3E%3Ccircle r='0.5' cx='10' cy='10'/%3E%3Ccircle r='0.5' cx='30' cy='20'/%3E%3Ccircle r='0.5' cx='50' cy='50'/%3E%3Ccircle r='0.5' cx='70' cy='30'/%3E%3Ccircle r='0.5' cx='90' cy='80'/%3E%3Ccircle r='0.5' cx='20' cy='70'/%3E%3Ccircle r='0.5' cx='40' cy='90'/%3E%3C/g%3E%3C/svg%3E");
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-    direction: rtl; /* Added for right-to-left support */
-  }
-  
-  #gameContainer {
-    position: relative;
-    width: 800px;
-    height: 600px;
-    background: linear-gradient(45deg, #000428, #004e92);
-    border: 2px solid #0f8;
-    border-radius: 20px;
-    box-shadow: 0 0 20px #0f8;
-    overflow: hidden;
-  }
-  
-  .player {
-    position: absolute;
-    width: 60px;
-    height: 60px;
-    transition: all 0.1s;
-  }
-  
-  .player img {
-    display: none;
-  }
-  
-  .player::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 20l-25 60h50z' fill='%230f8'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%2300ffaa'/%3E%3C/svg%3E") center/contain no-repeat;
-  }
-  
-  .virus {
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    animation: pulse 2s infinite;
-    z-index: 1;
-  }
-  
-  .virus img {
-    display: none;
-  }
-  
-  .virus::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23ff3366'/%3E%3Cpath d='M50 10v80M10 50h80M25 25l50 50M25 75l50-50' stroke='%23ff99aa' stroke-width='5'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%23ff99aa'/%3E%3C/svg%3E") center/contain no-repeat;
-  }
-  
-  .bullet {
-    position: absolute;
-    width: 10px;
-    height: 20px;
-    background: #0f8;
-    border-radius: 5px;
-    box-shadow: 0 0 10px #0f8;
-  }
-
-  .helper {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    transition: all 0.1s;
-    z-index: 2; /* Add this to ensure helpers appear above bullets */
-  }
-
-  .helper img {
-    display: none;
-  }
-
-  .helper::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 20l-25 60h50z' fill='%2300ffcc'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%2300ffaa'/%3E%3C/svg%3E") center/contain no-repeat;
-  }
-
-  .score {
-    position: absolute;
-    top: 10px;
-    right: 10px; /* Adjusted for RTL */
-    left: auto;
-    color: #0f0;
-    font-size: 24px;
-  }
-
-  .coins {
-    position: absolute;
-    top: 40px;
-    right: 10px; /* Adjusted for RTL */
-    left: auto;
-    color: gold;
-    font-size: 24px;
-  }
-  
-  .health {
-    position: absolute;
-    top: 10px;
-    left: 10px; /* Adjusted for RTL */
-    right: auto;
-    color: #0f0;
-    font-size: 24px;
-  }
-
-  .shop-button {
-    position: absolute;
-    top: 70px;
-    right: 10px; /* Adjusted for RTL */
-    left: auto;
-    padding: 10px;
-    background: #0f0;
-    color: #000;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-
-  .shop-modal {
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 50, 0, 0.9);
-    padding: 20px;
-    border: 2px solid #0f0;
-    color: #0f0;
-    z-index: 1000;
-    text-align: right; /* Adjusted for RTL */
-  }
-
-  .shop-item {
-    margin: 10px 0;
-    padding: 10px;
-    border: 1px solid #0f0;
-    cursor: pointer;
-  }
-
-  .shop-item:hover {
-    background: rgba(0, 255, 0, 0.2);
-  }
-  
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  }
-  
-  .game-over {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #f00;
-    font-size: 48px;
-    text-align: center;
-    display: none;
-    z-index: 1000;
-  }
-
-  .retry-button {
-    padding: 15px 30px;
-    font-size: 24px;
-    background: #0f0;
-    color: #000;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-    display: block;
-  }
-
-  .retry-button:hover {
-    background: #0f0;
-    transform: scale(1.1);
-  }
-
-  .start-screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #0f0;
-    z-index: 1000;
-  }
-
-  .start-button {
-    padding: 15px 30px;
-    font-size: 24px;
-    background: #0f0;
-    color: #000;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-  }
-
-  .start-button:hover {
-    background: #0f0;
-    transform: scale(1.1);
-  }
-</style>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>معركة الفيروسات!</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="gameContainer">
-  <div class="score">النقاط: <span id="scoreValue">0</span></div>
-  <div class="coins">العملات: <span id="coinsValue">0</span></div>
-  <div class="health">الصحة: <span id="healthValue">100</span></div>
-  <button class="shop-button" id="shopButton">المتجر</button>
-  <div class="shop-modal" id="shopModal">
-    <h2>المتجر</h2>
-    <div class="shop-item" data-cost="100" id="buyHelper">
-      شراء مساعد (100 عملة) - يساعد في إطلاق النار على الفيروسات
+  <div id="gameContainer">
+    <div class="score">النقاط: <span id="scoreValue">0</span></div>
+    <div class="coins">العملات: <span id="coinsValue">0</span></div>
+    <div class="health">الصحة: <span id="healthValue">100</span></div>
+    <button class="shop-button laser-border" id="shopButton">المتجر</button>
+    <div class="shop-modal laser-border" id="shopModal">
+      <h2>المتجر</h2>
+      <div class="shop-item laser-border" data-cost="100" id="buyHelper">
+        شراء مساعد (100 عملة) - يساعد في إطلاق النار على الفيروسات
+      </div>
+      <button onclick="closeShop()" class="laser-border">إغلاق</button>
     </div>
-    <button onclick="closeShop()">إغلاق</button>
+    <div class="game-over" id="gameOver">
+      انتهت اللعبة
+      <button class="retry-button laser-border" id="retryButton">إعادة المحاولة</button>
+    </div>
+    <div class="start-screen" id="startScreen">
+      <h1>معركة الفيروسات!</h1>
+      <p>تحرك بالماوس واضغط للتصويب!</p>
+      <button class="start-button laser-border" id="startButton">ابدأ اللعبة</button>
+    </div>
+    <div class="difficulty-screen laser-border" id="difficultyScreen">
+      <h1>اختر مستوى الصعوبة</h1>
+      <button class="laser-border" onclick="setDifficulty('easy')">سهل</button>
+      <button class="laser-border" onclick="setDifficulty('medium')">متوسط</button>
+      <button class="laser-border" onclick="setDifficulty('hard')">صعب</button>
+    </div>
   </div>
-  <div class="game-over" id="gameOver">
-    انتهت اللعبة
-    <button class="retry-button" id="retryButton">إعادة المحاولة</button>
-  </div>
-  <div class="start-screen" id="startScreen">
-    <h1>معركة الفيروسات!</h1>
-    <p>تحرك بالماوس واضغط للتصويب!</p>
-    <button class="start-button" id="startButton">ابدأ اللعبة</button>
-  </div>
-</div>
 
-<script>
-const gameContainer = document.getElementById('gameContainer');
-const scoreElement = document.getElementById('scoreValue');
-const coinsElement = document.getElementById('coinsValue');
-const healthElement = document.getElementById('healthValue');
-const gameOverElement = document.getElementById('gameOver');
-const startScreen = document.getElementById('startScreen');
-const startButton = document.getElementById('startButton');
-const retryButton = document.getElementById('retryButton');
-const shopButton = document.getElementById('shopButton');
-const shopModal = document.getElementById('shopModal');
-const buyHelperButton = document.getElementById('buyHelper');
+  <script>
+    let difficulty = 'medium';
+    let virusHealth = 1;
 
-let score = 0;
-let coins = 0;
-let health = 100;
-let player = null;
-let viruses = [];
-let bullets = [];
-let helpers = [];
-let gameActive = false;
-let gameLoop = null;
-let virusLoop = null;
-let helperShootLoop = null;
-let helperMoveIntervals = []; // Added for helper movement intervals
-
-function createPlayer() {
-  player = document.createElement('div');
-  player.className = 'player';
-  player.style.left = '50px';
-  player.style.top = (gameContainer.offsetHeight - 80) + 'px'; // Position near bottom
-  gameContainer.appendChild(player);
-}
-
-function moveHelper(helper) {
-  const newX = Math.random() * (gameContainer.offsetWidth - 40);
-  const duration = Math.random() * 2000 + 1000; // Random duration between 1-3 seconds
-  
-  helper.style.transition = `left ${duration}ms ease-in-out`;
-  helper.style.left = newX + 'px';
-}
-
-function createHelper() {
-  const helper = document.createElement('div');
-  helper.className = 'helper';
-  helper.style.left = Math.random() * (gameContainer.offsetWidth - 40) + 'px';
-  helper.style.top = gameContainer.offsetHeight - 80 + 'px';
-  gameContainer.appendChild(helper);
-  helpers.push(helper);
-  
-  moveHelper(helper);
-  const moveInterval = setInterval(() => moveHelper(helper), 3000); // Move every 3 seconds
-  helperMoveIntervals.push(moveInterval);
-}
-
-function createVirus() {
-  const virus = document.createElement('div');
-  virus.className = 'virus';
-  virus.style.left = Math.random() * (gameContainer.offsetWidth - 50) + 'px';
-  virus.style.top = '0px'; // Changed from -50px to 0px
-  gameContainer.appendChild(virus);
-  viruses.push(virus);
-}
-
-function shoot(x, y) {
-  const bullet = document.createElement('div');
-  bullet.className = 'bullet';
-  bullet.style.left = x + 25 + 'px'; // Updated from 40
-  bullet.style.top = y + 'px';
-  gameContainer.appendChild(bullet);
-  bullets.push(bullet);
-}
-
-function helperShoot() {
-  helpers.forEach(helper => {
-    const helperRect = helper.getBoundingClientRect();
-    shoot(helperRect.left - gameContainer.getBoundingClientRect().left, 
-          helperRect.top - gameContainer.getBoundingClientRect().top);
-  });
-}
-
-function checkCollision(rect1, rect2) {
-  return !(rect1.right < rect2.left || 
-           rect1.left > rect2.right || 
-           rect1.bottom < rect2.top || 
-           rect1.top > rect2.bottom);
-}
-
-function openShop() {
-  if (gameActive) {
-    shopModal.style.display = 'block';
-  }
-}
-
-function closeShop() {
-  shopModal.style.display = 'none';
-}
-
-function buyHelper() {
-  if (coins >= 100) {
-    coins -= 100;
-    coinsElement.textContent = coins;
-    createHelper();
-    closeShop();
-  }
-}
-
-function updateGame() {
-  if (!gameActive) return;
-
-  const playerRect = player.getBoundingClientRect();
-  const containerRect = gameContainer.getBoundingClientRect();
-
-  viruses.forEach((virus, index) => {
-    const virusRect = virus.getBoundingClientRect();
-    const top = parseFloat(virus.style.top) || 0;
-    const left = parseFloat(virus.style.left) || 0;
-    
-    // Adjusted virus movement speed
-    const dx = (playerRect.left - virusRect.left) * 0.01; // Reduced from 0.05 to 0.01
-    const dy = (playerRect.top - virusRect.top) * 0.01; // Reduced from 0.05 to 0.01
-    
-    const newLeft = left + dx;
-    const newTop = top + dy;
-    
-    // Keep virus inside container bounds
-    virus.style.left = Math.max(0, Math.min(gameContainer.offsetWidth - 50, newLeft)) + 'px';
-    virus.style.top = Math.max(0, Math.min(gameContainer.offsetHeight - 50, newTop)) + 'px';
-    
-    // Improved collision check
-    if (checkCollision(playerRect, virusRect)) {
-      health -= 1;
-      healthElement.textContent = health;
-      
-      if (health <= 0) {
-        gameOver();
+    function setDifficulty(level) {
+      difficulty = level;
+      switch (level) {
+        case 'easy':
+          virusHealth = 1;
+          break;
+        case 'medium':
+          virusHealth = 2;
+          break;
+        case 'hard':
+          virusHealth = 3;
+          break;
       }
+      document.getElementById('difficultyScreen').style.display = 'none';
+      startScreen.style.display = 'block';
     }
-    
-    // Remove viruses that go past the bottom
-    if (top > gameContainer.offsetHeight) {
-      gameContainer.removeChild(virus);
-      viruses.splice(index, 1);
-      health -= 10;
-      healthElement.textContent = health;
-      
-      if (health <= 0) {
-        gameOver();
-      }
-    }
-  });
 
-  bullets.forEach((bullet, bulletIndex) => {
-    const top = parseFloat(bullet.style.top);
-    bullet.style.top = (top - 5) + 'px';
-    
-    if (top < 0) {
-      gameContainer.removeChild(bullet);
-      bullets.splice(bulletIndex, 1);
+    function createVirus() {
+      const virus = document.createElement('div');
+      virus.className = 'virus';
+      virus.dataset.health = virusHealth;
+      virus.style.left = Math.random() * (gameContainer.offsetWidth - 50) + 'px';
+      virus.style.top = '0px';
+      gameContainer.appendChild(virus);
+      viruses.push(virus);
     }
-    
-    viruses.forEach((virus, virusIndex) => {
-      const virusRect = virus.getBoundingClientRect();
-      const bulletRect = bullet.getBoundingClientRect();
-      
-      if (checkCollision(bulletRect, virusRect)) {
-        gameContainer.removeChild(virus);
-        gameContainer.removeChild(bullet);
-        viruses.splice(virusIndex, 1);
-        bullets.splice(bulletIndex, 1);
-        score += 10;
-        coins += 10;
-        scoreElement.textContent = score;
-        coinsElement.textContent = coins;
-      }
+
+    function updateGame() {
+      if (!gameActive) return;
+
+      const playerRect = player.getBoundingClientRect();
+
+      viruses.forEach((virus, index) => {
+        const virusRect = virus.getBoundingClientRect();
+        let virusHealth = parseInt(virus.dataset.health);
+        const top = parseFloat(virus.style.top) || 0;
+
+        if (score >= 200) {
+          virus.dataset.health = virusHealth;
+        }
+
+        if (checkCollision(playerRect, virusRect)) {
+          health -= 1;
+          healthElement.textContent = health;
+          if (health <= 0) gameOver();
+        }
+
+        bullets.forEach((bullet, bulletIndex) => {
+          const bulletRect = bullet.getBoundingClientRect();
+          if (checkCollision(bulletRect, virusRect)) {
+            virusHealth -= 1;
+            if (virusHealth <= 0) {
+              gameContainer.removeChild(virus);
+              viruses.splice(index, 1);
+              score += 10;
+              coins += 10;
+              scoreElement.textContent = score;
+              coinsElement.textContent = coins;
+            } else {
+              virus.dataset.health = virusHealth;
+            }
+            gameContainer.removeChild(bullet);
+            bullets.splice(bulletIndex, 1);
+          }
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('difficultyScreen').style.display = 'block';
     });
-  });
-}
 
-function gameOver() {
-  gameActive = false;
-  gameOverElement.style.display = 'block';
-  clearInterval(gameLoop);
-  clearInterval(virusLoop);
-  clearInterval(helperShootLoop);
-  helperMoveIntervals.forEach(interval => clearInterval(interval)); // Clear helper movement intervals
-}
+    const startButton = document.getElementById('startButton');
+    startButton.addEventListener('click', startGame);
 
-function startGame() {
-  score = 0;
-  health = 100;
-  coins = 0;
-  viruses.forEach(virus => gameContainer.removeChild(virus));
-  bullets.forEach(bullet => gameContainer.removeChild(bullet));
-  helpers.forEach(helper => gameContainer.removeChild(helper));
-  viruses = [];
-  bullets = [];
-  helpers = [];
-  scoreElement.textContent = '0';
-  coinsElement.textContent = '0';
-  healthElement.textContent = '100';
-  gameOverElement.style.display = 'none';
-  shopModal.style.display = 'none';
-  
-  // Clear existing helper movement intervals
-  helperMoveIntervals.forEach(interval => clearInterval(interval));
-  helperMoveIntervals = [];
-  
-  if (player) {
-    gameContainer.removeChild(player);
-  }
-  
-  createPlayer();
-  gameActive = true;
-  startScreen.style.display = 'none';
-  
-  gameLoop = setInterval(updateGame, 1000/60);
-  virusLoop = setInterval(createVirus, 3000); // Increased from 2000ms to 3000ms
-  helperShootLoop = setInterval(helperShoot, 1000);
-}
+    const retryButton = document.getElementById('retryButton');
+    retryButton.addEventListener('click', startGame);
 
-document.addEventListener('mousemove', (e) => {
-  if (!gameActive) return;
-  const containerRect = gameContainer.getBoundingClientRect();
-  const x = e.clientX - containerRect.left;
-  if (x >= 0 && x <= gameContainer.offsetWidth - 60) {
-    player.style.left = x + 'px';
-    // Keep vertical position fixed at bottom
-    player.style.top = (gameContainer.offsetHeight - 80) + 'px';
-  }
-});
+    const shopButton = document.getElementById('shopButton');
+    shopButton.addEventListener('click', openShop);
 
-document.addEventListener('click', (e) => {
-  if (!gameActive || e.target === startButton || e.target === retryButton) return;
-  const playerRect = player.getBoundingClientRect();
-  shoot(playerRect.left - gameContainer.getBoundingClientRect().left, playerRect.top - gameContainer.getBoundingClientRect().top);
-});
+    const buyHelperButton = document.getElementById('buyHelper');
+    buyHelperButton.addEventListener('click', buyHelper);
 
-startButton.addEventListener('click', startGame);
-retryButton.addEventListener('click', startGame);
-shopButton.addEventListener('click', openShop);
-buyHelperButton.addEventListener('click', buyHelper);
-</script>
-</body></html>
+    function startGame() {
+      console.log('Game Started!');
+      // Add your game logic here
+    }
+
+  </script>
+</body>
+</html>
