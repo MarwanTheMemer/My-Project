@@ -12,7 +12,7 @@
       background: #000;
       font-family: Arial, sans-serif;
       overflow: hidden;
-      direction: rtl; /* Added for right-to-left support */
+      direction: rtl;
     }
 
     #gameContainer {
@@ -28,11 +28,9 @@
 
     .player {
       position: absolute;
-      width: 50px;
-      height: 50px;
-      background: #0f8;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #0f8;
+      width: 60px;
+      height: 60px;
+      background: url('player-icon.png') center/cover no-repeat;
       left: 50%;
       bottom: 10%;
       transform: translateX(-50%);
@@ -40,11 +38,16 @@
 
     .virus {
       position: absolute;
-      width: 40px;
-      height: 40px;
-      background: red;
-      border-radius: 50%;
-      box-shadow: 0 0 10px red;
+      width: 50px;
+      height: 50px;
+      background: url('virus-icon.png') center/cover no-repeat;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
     }
 
     .bullet {
@@ -59,14 +62,25 @@
     .laser-effect {
       position: relative;
       border: 2px solid transparent;
-      animation: laserGlow 2s infinite;
       border-radius: 5px;
+      background: none;
     }
 
-    @keyframes laserGlow {
-      0% { box-shadow: 0 0 5px #0f8; }
-      50% { box-shadow: 0 0 15px #0f8; }
-      100% { box-shadow: 0 0 5px #0f8; }
+    .laser-effect::before {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      right: -5px;
+      bottom: -5px;
+      border: 2px solid #0f8;
+      border-radius: 5px;
+      animation: laserMove 2s linear infinite;
+    }
+
+    @keyframes laserMove {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .shop-button, .retry-button, .start-button {
@@ -76,34 +90,9 @@
       color: #000;
       border: none;
       cursor: pointer;
-      z-index: 10;
     }
 
-    .shop-modal {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 50, 0, 0.9);
-      padding: 20px;
-      border: 2px solid #0f0;
-      color: #0f0;
-      z-index: 1000;
-    }
-
-    .game-over {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: red;
-      font-size: 48px;
-      z-index: 10;
-    }
-
-    .start-screen {
+    .game-over, .start-screen {
       position: absolute;
       top: 0;
       left: 0;
@@ -115,6 +104,21 @@
       align-items: center;
       flex-direction: column;
       z-index: 1000;
+    }
+
+    .score, .coins {
+      position: absolute;
+      top: 10px;
+      font-size: 20px;
+      color: #0f0;
+    }
+
+    .score {
+      right: 10px;
+    }
+
+    .coins {
+      left: 10px;
     }
   </style>
 </head>
@@ -128,10 +132,8 @@
       انتهت اللعبة
       <button id="retryButton" class="retry-button laser-effect">إعادة المحاولة</button>
     </div>
-    <div id="shopModal" class="shop-modal laser-effect">
-      <h2>المتجر</h2>
-      <button onclick="closeShop()">إغلاق</button>
-    </div>
+    <div class="score">النقاط: <span id="scoreValue">0</span></div>
+    <div class="coins">العملات: <span id="coinsValue">0</span></div>
   </div>
 
   <script>
@@ -140,22 +142,36 @@
     const retryButton = document.getElementById('retryButton');
     const startScreen = document.getElementById('startScreen');
     const gameOverScreen = document.getElementById('gameOver');
+    const scoreValue = document.getElementById('scoreValue');
+    const coinsValue = document.getElementById('coinsValue');
 
     let gameActive = false;
     let player = null;
     let viruses = [];
     let bullets = [];
+    let score = 0;
+    let coins = 0;
 
     function createPlayer() {
       player = document.createElement('div');
       player.className = 'player';
+      player.style.left = '50%';
       gameContainer.appendChild(player);
+    }
+
+    function movePlayer(e) {
+      if (!player) return;
+      const containerRect = gameContainer.getBoundingClientRect();
+      const newLeft = e.clientX - containerRect.left;
+      if (newLeft > 0 && newLeft < containerRect.width - 50) {
+        player.style.left = newLeft + 'px';
+      }
     }
 
     function createVirus() {
       const virus = document.createElement('div');
       virus.className = 'virus';
-      virus.style.left = Math.random() * (gameContainer.offsetWidth - 40) + 'px';
+      virus.style.left = Math.random() * (gameContainer.offsetWidth - 50) + 'px';
       virus.style.top = '0px';
       gameContainer.appendChild(virus);
       viruses.push(virus);
@@ -204,15 +220,16 @@
 
     function startGame() {
       gameActive = true;
+      score = 0;
+      coins = 0;
+      scoreValue.textContent = score;
+      coinsValue.textContent = coins;
       startScreen.style.display = 'none';
       gameOverScreen.style.display = 'none';
       createPlayer();
+      gameContainer.addEventListener('mousemove', movePlayer);
       setInterval(createVirus, 2000);
       updateGame();
-      window.addEventListener('keydown', (e) => {
-        if (e.key === ' ') shootBullet();
-      });
-      console.log('Game Started');
     }
 
     function endGame() {
