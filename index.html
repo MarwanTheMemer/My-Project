@@ -1,493 +1,607 @@
-<html><head><base href="/" charset="UTF-8"><title>معركة الفيروسات!</title>
+<html><head><base href="." />
+<meta charset="UTF-8">
+<title>معركة الفيروسات - Virus Battle</title>
 <style>
-  body {
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: #000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Cg fill='white' fill-opacity='0.3'%3E%3Ccircle r='0.5' cx='10' cy='10'/%3E%3Ccircle r='0.5' cx='30' cy='20'/%3E%3Ccircle r='0.5' cx='50' cy='50'/%3E%3Ccircle r='0.5' cx='70' cy='30'/%3E%3Ccircle r='0.5' cx='90' cy='80'/%3E%3Ccircle r='0.5' cx='20' cy='70'/%3E%3Ccircle r='0.5' cx='40' cy='90'/%3E%3C/g%3E%3C/svg%3E");
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-    direction: rtl; /* Added for right-to-left support */
-  }
-  
-  #gameContainer {
-    position: relative;
-    width: 800px;
-    height: 600px;
-    background: linear-gradient(45deg, #000428, #004e92);
-    border: 2px solid #0f8;
-    border-radius: 20px;
-    box-shadow: 0 0 20px #0f8;
-    overflow: hidden;
-  }
-  
-  .player {
-    position: absolute;
-    width: 60px;
-    height: 60px;
-    transition: all 0.1s;
-  }
-  
-  .player img {
-    display: none;
-  }
-  
-  .player::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 20l-25 60h50z' fill='%230f8'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%2300ffaa'/%3E%3C/svg%3E") center/contain no-repeat;
-  }
-  
-  .virus {
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    animation: pulse 2s infinite;
-    z-index: 1;
-  }
-  
-  .virus img {
-    display: none;
-  }
-  
-  .virus::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23ff3366'/%3E%3Cpath d='M50 10v80M10 50h80M25 25l50 50M25 75l50-50' stroke='%23ff99aa' stroke-width='5'/%3E%3Ccircle cx='50' cy='50' r='15' fill='%23ff99aa'/%3E%3C/svg%3E") center/contain no-repeat;
-  }
-  
-  .bullet {
-    position: absolute;
-    width: 10px;
-    height: 20px;
-    background: #0f8;
-    border-radius: 5px;
-    box-shadow: 0 0 10px #0f8;
-  }
+:root {
+  --primary: #2196f3;
+  --background: #000814;
+  --text: #ffffff;
+}
 
-  .helper {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    transition: all 0.1s;
-    z-index: 2; /* Add this to ensure helpers appear above bullets */
-  }
+@keyframes stars {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
-  .helper img {
-    display: none;
-  }
+@keyframes borderAnimation {
+  0% { border-color: #00ff00; }
+  25% { border-color: #ff00ff; }
+  50% { border-color: #00ffff; }
+  75% { border-color: #ffff00; }
+  100% { border-color: #00ff00; }
+}
 
-  .helper::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 20l-25 60h50z' fill='%2300ffcc'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%2300ffaa'/%3E%3C/svg%3E") center/contain no-repeat;
-  }
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: 'Cairo', Arial, sans-serif;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  direction: rtl;
+  position: relative;
+}
 
-  .score {
-    position: absolute;
-    top: 10px;
-    right: 10px; /* Adjusted for RTL */
-    left: auto;
-    color: #0f0;
-    font-size: 24px;
-  }
+body::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background-image: 
+    radial-gradient(2px 2px at 40px 60px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 20px 50px, #fff9, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 30px 100px, #fff9, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 40px 60px, #fff9, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 110px 90px, #fff9, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 190px 150px, #fff9, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: stars 100s linear infinite;
+  z-index: -1;
+}
 
-  .coins {
-    position: absolute;
-    top: 40px;
-    right: 10px; /* Adjusted for RTL */
-    left: auto;
-    color: gold;
-    font-size: 24px;
-  }
-  
-  .health {
-    position: absolute;
-    top: 10px;
-    left: 10px; /* Adjusted for RTL */
-    right: auto;
-    color: #0f0;
-    font-size: 24px;
-  }
+#gameContainer {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  background: rgba(0,20,40,0.8);
+  border-radius: 10px;
+  border: 3px solid #00aa00;
+  box-shadow: 
+    0 0 15px rgba(0, 255, 0, 0.4),
+    0 0 30px rgba(0, 255, 0, 0.2),
+    0 0 45px rgba(0, 255, 0, 0.1),
+    inset 0 0 20px rgba(0, 255, 0, 0.2);
+}
 
-  .shop-button {
-    position: absolute;
-    top: 70px;
-    right: 10px; /* Adjusted for RTL */
-    left: auto;
-    padding: 10px;
-    background: #0f0;
-    color: #000;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
+#gameContainer.playing {
+  animation: borderAnimation 3s linear infinite;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 0, 0.5),
+    0 0 40px rgba(0, 255, 0, 0.3),
+    0 0 60px rgba(0, 255, 0, 0.2),
+    inset 0 0 30px rgba(0, 255, 0, 0.3);
+}
 
-  .shop-modal {
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 50, 0, 0.9);
-    padding: 20px;
-    border: 2px solid #0f0;
-    color: #0f0;
-    z-index: 1000;
-    text-align: right; /* Adjusted for RTL */
-  }
+#gameCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 10px;
+}
 
-  .shop-item {
-    margin: 10px 0;
-    padding: 10px;
-    border: 1px solid #0f0;
-    cursor: pointer;
-  }
+.menu {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  z-index: 10;
+  background: rgba(0,8,20,0.9);
+  border-radius: 10px;
+}
 
-  .shop-item:hover {
-    background: rgba(0, 255, 0, 0.2);
-  }
-  
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  }
-  
-  .game-over {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #f00;
-    font-size: 48px;
-    text-align: center;
-    display: none;
-    z-index: 1000;
-  }
+.laser-button {
+  position: relative;
+  padding: 15px 30px;
+  font-size: 24px;
+  background: rgba(0, 255, 0, 0.05);
+  color: var(--text);
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s;
+}
 
-  .retry-button {
-    padding: 15px 30px;
-    font-size: 24px;
-    background: #0f0;
-    color: #000;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-    display: block;
-  }
+.laser-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  animation: outlineTracer 2s linear infinite;
+}
 
-  .retry-button:hover {
-    background: #0f0;
-    transform: scale(1.1);
+@keyframes outlineTracer {
+  0% {
+    clip-path: inset(0 98% 0 0);
+    border-color: #00ff00;
   }
+  25% {
+    clip-path: inset(0 0 98% 0);
+    border-color: #ff00ff;
+  }
+  50% {
+    clip-path: inset(0 0 0 98%);
+    border-color: #00ffff;
+  }
+  75% {
+    clip-path: inset(98% 0 0 0);
+    border-color: #ffff00;
+  }
+  100% {
+    clip-path: inset(0 98% 0 0);
+    border-color: #00ff00;
+  }
+}
 
-  .start-screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #0f0;
-    z-index: 1000;
-  }
+.laser-button:hover {
+  background: rgba(0, 255, 0, 0.1);
+  transform: scale(1.05);
+}
 
-  .start-button {
-    padding: 15px 30px;
-    font-size: 24px;
-    background: #0f0;
-    color: #000;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-  }
+.laser-button:hover::before {
+  filter: brightness(1.5);
+  box-shadow: 
+    0 0 15px rgba(0, 255, 0, 0.6),
+    0 0 30px rgba(0, 255, 0, 0.4);
+}
 
-  .start-button:hover {
-    background: #0f0;
-    transform: scale(1.1);
-  }
+#hud {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  padding: 10px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 5px;
+  display: flex;
+  gap: 20px;
+}
+
+.shop-icon {
+  cursor: pointer;
+  padding: 5px 10px;
+  background: rgba(0,255,0,0.2);
+  border-radius: 5px;
+  margin-left: 20px;
+}
+
+#shopMenu {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,20,40,0.95);
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 20;
+  border: 2px solid #00ff00;
+}
+
+.upgrade {
+  margin: 10px 0;
+  padding: 10px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.upgrade:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+#pauseButton {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  background: rgba(0,255,0,0.2);
+  border: 1px solid #00ff00;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
 </style>
 </head>
 <body>
 <div id="gameContainer">
-  <div class="score">النقاط: <span id="scoreValue">0</span></div>
-  <div class="coins">العملات: <span id="coinsValue">0</span></div>
-  <div class="health">الصحة: <span id="healthValue">100</span></div>
-  <button class="shop-button" id="shopButton">المتجر</button>
-  <div class="shop-modal" id="shopModal">
-    <h2>المتجر</h2>
-    <div class="shop-item" data-cost="100" id="buyHelper">
-      شراء مساعد (100 عملة) - يساعد في إطلاق النار على الفيروسات
+    <canvas id="gameCanvas"></canvas>
+    <div id="hud">
+        النقاط: <span id="score">0</span>
+        العملات: <span id="coins">0</span>
+        <span class="shop-icon" onclick="openShop()">🛍️ المتجر</span>
     </div>
-    <button onclick="closeShop()">إغلاق</button>
-  </div>
-  <div class="game-over" id="gameOver">
-    انتهت اللعبة
-    <button class="retry-button" id="retryButton">إعادة المحاولة</button>
-  </div>
-  <div class="start-screen" id="startScreen">
-    <h1>معركة الفيروسات!</h1>
-    <p>تحرك بالماوس واضغط للتصويب!</p>
-    <button class="start-button" id="startButton">ابدأ اللعبة</button>
-  </div>
+    <button id="pauseButton" onclick="togglePause()">⏸️ إيقاف مؤقت</button>
+    <div id="mainMenu" class="menu">
+        <h1>معركة الفيروسات</h1>
+        <button class="laser-button" onclick="startGame('easy')">سهل</button>
+        <button class="laser-button" onclick="startGame('medium')">متوسط</button>
+        <button class="laser-button" onclick="startGame('hard')">صعب</button>
+    </div>
+    <div id="shopMenu">
+        <h2>المتجر</h2>
+        <div class="upgrade" onclick="purchaseUpgrade('speed')">
+            سرعة أكبر (100 عملة)
+        </div>
+        <div class="upgrade" onclick="purchaseUpgrade('shield')">
+            درع واقي (200 عملة)
+        </div>
+        <div class="upgrade" onclick="purchaseUpgrade('buddy')">
+            صديق (300 عملة)
+        </div>
+        <button class="laser-button" onclick="closeShop()">عودة</button>
+    </div>
 </div>
 
 <script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const mainMenu = document.getElementById('mainMenu');
+const shopMenu = document.getElementById('shopMenu');
 const gameContainer = document.getElementById('gameContainer');
-const scoreElement = document.getElementById('scoreValue');
-const coinsElement = document.getElementById('coinsValue');
-const healthElement = document.getElementById('healthValue');
-const gameOverElement = document.getElementById('gameOver');
-const startScreen = document.getElementById('startScreen');
-const startButton = document.getElementById('startButton');
-const retryButton = document.getElementById('retryButton');
-const shopButton = document.getElementById('shopButton');
-const shopModal = document.getElementById('shopModal');
-const buyHelperButton = document.getElementById('buyHelper');
 
-let score = 0;
-let coins = 0;
-let health = 100;
-let player = null;
-let viruses = [];
+let gameState = {
+    score: 0,
+    coins: 0,
+    isPlaying: false,
+    difficulty: 'easy',
+    isPaused: false,
+    shieldHealth: 2,
+    maxShieldHealth: 2,
+    shieldOpacity: 1,
+    buddyCount: 0,
+    buddies: [],
+    upgrades: {
+        speed: 1,
+        shield: false,
+        buddy: false
+    }
+};
+
+let player = {
+    x: 400,
+    y: 550,
+    width: 60,
+    height: 40,
+    speed: 5,
+    color: '#00ff00'
+};
+
 let bullets = [];
-let helpers = [];
-let gameActive = false;
-let gameLoop = null;
-let virusLoop = null;
-let helperShootLoop = null;
-let helperMoveIntervals = []; // Added for helper movement intervals
+let viruses = [];
+let lastSpawn = 0;
 
-function createPlayer() {
-  player = document.createElement('div');
-  player.className = 'player';
-  player.style.left = '50px';
-  player.style.top = (gameContainer.offsetHeight - 80) + 'px'; // Position near bottom
-  gameContainer.appendChild(player);
+function resizeCanvas() {
+    canvas.width = gameContainer.clientWidth;
+    canvas.height = gameContainer.clientHeight;
 }
 
-function moveHelper(helper) {
-  const newX = Math.random() * (gameContainer.offsetWidth - 40);
-  const duration = Math.random() * 2000 + 1000; // Random duration between 1-3 seconds
-  
-  helper.style.transition = `left ${duration}ms ease-in-out`;
-  helper.style.left = newX + 'px';
-}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-function createHelper() {
-  const helper = document.createElement('div');
-  helper.className = 'helper';
-  helper.style.left = Math.random() * (gameContainer.offsetWidth - 40) + 'px';
-  helper.style.top = gameContainer.offsetHeight - 80 + 'px';
-  gameContainer.appendChild(helper);
-  helpers.push(helper);
-  
-  moveHelper(helper);
-  const moveInterval = setInterval(() => moveHelper(helper), 3000); // Move every 3 seconds
-  helperMoveIntervals.push(moveInterval);
-}
-
-function createVirus() {
-  const virus = document.createElement('div');
-  virus.className = 'virus';
-  virus.style.left = Math.random() * (gameContainer.offsetWidth - 50) + 'px';
-  virus.style.top = '0px'; // Changed from -50px to 0px
-  gameContainer.appendChild(virus);
-  viruses.push(virus);
-}
-
-function shoot(x, y) {
-  const bullet = document.createElement('div');
-  bullet.className = 'bullet';
-  bullet.style.left = x + 25 + 'px'; // Updated from 40
-  bullet.style.top = y + 'px';
-  gameContainer.appendChild(bullet);
-  bullets.push(bullet);
-}
-
-function helperShoot() {
-  helpers.forEach(helper => {
-    const helperRect = helper.getBoundingClientRect();
-    shoot(helperRect.left - gameContainer.getBoundingClientRect().left, 
-          helperRect.top - gameContainer.getBoundingClientRect().top);
-  });
-}
-
-function checkCollision(rect1, rect2) {
-  return !(rect1.right < rect2.left || 
-           rect1.left > rect2.right || 
-           rect1.bottom < rect2.top || 
-           rect1.top > rect2.bottom);
+function startGame(difficulty) {
+    gameState.difficulty = difficulty;
+    gameState.isPlaying = true;
+    mainMenu.style.display = 'none';
+    gameContainer.classList.add('playing');
+    gameLoop();
 }
 
 function openShop() {
-  if (gameActive) {
-    shopModal.style.display = 'block';
-  }
+    shopMenu.style.display = 'block';
 }
 
 function closeShop() {
-  shopModal.style.display = 'none';
+    shopMenu.style.display = 'none';
 }
 
-function buyHelper() {
-  if (coins >= 100) {
-    coins -= 100;
-    coinsElement.textContent = coins;
-    createHelper();
-    closeShop();
-  }
+function purchaseUpgrade(type) {
+    if (type === 'speed' && gameState.coins >= 100) {
+        gameState.coins -= 100;
+        gameState.upgrades.speed += 0.2;
+    } else if (type === 'shield' && gameState.coins >= 200) {
+        gameState.coins -= 200;
+        gameState.upgrades.shield = true;
+        gameState.shieldHealth = gameState.maxShieldHealth;
+        gameState.shieldOpacity = 1;
+    } else if (type === 'buddy' && gameState.coins >= 300) {
+        gameState.coins -= 300;
+        gameState.upgrades.buddy = true;
+        gameState.buddyCount++;
+        
+        const newBuddy = {
+            x: player.x,
+            y: player.y,
+            width: 30,
+            height: 30,
+            color: '#ffff00',
+            angle: Math.random() * Math.PI * 2,
+            speed: gameState.buddyCount > 1 ? 8 : 3,
+            isErratic: gameState.buddyCount > 1
+        };
+        
+        gameState.buddies.push(newBuddy);
+    }
+    updateHUD();
 }
 
-function updateGame() {
-  if (!gameActive) return;
+function handleInput() {
+    window.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        player.x = Math.max(0, Math.min(e.clientX - rect.left - player.width / 2, canvas.width - player.width));
+    };
 
-  const playerRect = player.getBoundingClientRect();
-  const containerRect = gameContainer.getBoundingClientRect();
+    window.onkeydown = (e) => {
+        if (e.code === 'Space') {
+            shoot();
+        }
+    };
 
-  viruses.forEach((virus, index) => {
-    const virusRect = virus.getBoundingClientRect();
-    const top = parseFloat(virus.style.top) || 0;
-    const left = parseFloat(virus.style.left) || 0;
-    
-    // Adjusted virus movement speed
-    const dx = (playerRect.left - virusRect.left) * 0.01; // Reduced from 0.05 to 0.01
-    const dy = (playerRect.top - virusRect.top) * 0.01; // Reduced from 0.05 to 0.01
-    
-    const newLeft = left + dx;
-    const newTop = top + dy;
-    
-    // Keep virus inside container bounds
-    virus.style.left = Math.max(0, Math.min(gameContainer.offsetWidth - 50, newLeft)) + 'px';
-    virus.style.top = Math.max(0, Math.min(gameContainer.offsetHeight - 50, newTop)) + 'px';
-    
-    // Improved collision check
-    if (checkCollision(playerRect, virusRect)) {
-      health -= 1;
-      healthElement.textContent = health;
-      
-      if (health <= 0) {
-        gameOver();
-      }
-    }
-    
-    // Remove viruses that go past the bottom
-    if (top > gameContainer.offsetHeight) {
-      gameContainer.removeChild(virus);
-      viruses.splice(index, 1);
-      health -= 10;
-      healthElement.textContent = health;
-      
-      if (health <= 0) {
-        gameOver();
-      }
-    }
-  });
+    canvas.onclick = () => shoot();
+}
 
-  bullets.forEach((bullet, bulletIndex) => {
-    const top = parseFloat(bullet.style.top);
-    bullet.style.top = (top - 5) + 'px';
-    
-    if (top < 0) {
-      gameContainer.removeChild(bullet);
-      bullets.splice(bulletIndex, 1);
-    }
-    
-    viruses.forEach((virus, virusIndex) => {
-      const virusRect = virus.getBoundingClientRect();
-      const bulletRect = bullet.getBoundingClientRect();
-      
-      if (checkCollision(bulletRect, virusRect)) {
-        gameContainer.removeChild(virus);
-        gameContainer.removeChild(bullet);
-        viruses.splice(virusIndex, 1);
-        bullets.splice(bulletIndex, 1);
-        score += 10;
-        coins += 10;
-        scoreElement.textContent = score;
-        coinsElement.textContent = coins;
-      }
+function shoot() {
+    if (!gameState.isPlaying || gameState.isPaused) return;
+    bullets.push({
+        x: player.x + player.width / 2,
+        y: player.y,
+        speed: 10 * gameState.upgrades.speed,
+        width: 12,
+        height: 20,
+        color: '#90ff90'
     });
-  });
+}
+
+function spawnVirus() {
+    const now = Date.now();
+    const spawnRate = gameState.difficulty === 'easy' ? 1000 :
+                     gameState.difficulty === 'medium' ? 750 : 500;
+    
+    if (now - lastSpawn >= spawnRate) {
+        const virusCount = gameState.difficulty === 'hard' ? 3 : 1;
+        
+        for(let i = 0; i < virusCount; i++) {
+            const virusType = Math.random() < 0.5 ? 'regular' : 'pink';
+            viruses.push({
+                x: Math.random() * (canvas.width - 30),
+                y: -30,
+                width: 30,
+                height: 30,
+                speed: gameState.difficulty === 'easy' ? 2 :
+                       gameState.difficulty === 'medium' ? 3 : 4,
+                type: virusType,
+                scale: 1
+            });
+        }
+        lastSpawn = now;
+    }
+}
+
+function update() {
+    if (gameState.isPaused) return;
+
+    spawnVirus();
+    
+    bullets = bullets.filter(bullet => {
+        bullet.y -= bullet.speed;
+        return bullet.y > 0;
+    });
+
+    viruses = viruses.filter(virus => {
+        virus.y += virus.speed;
+        virus.scale = 1 + Math.sin(Date.now() / 200) * 0.2;
+        
+        const hitBullet = bullets.find(bullet => 
+            bullet.x < virus.x + virus.width &&
+            bullet.x + bullet.width > virus.x &&
+            bullet.y < virus.y + virus.height &&
+            bullet.y + bullet.height > virus.y
+        );
+
+        if (hitBullet) {
+            gameState.score += 10;
+            gameState.coins += gameState.difficulty === 'easy' ? 10 :
+                              gameState.difficulty === 'medium' ? 20 : 30;
+            updateHUD();
+            bullets = bullets.filter(b => b !== hitBullet);
+            return false;
+        }
+
+        if (virus.y + virus.height > player.y &&
+            virus.x < player.x + player.width &&
+            virus.x + virus.width > player.x) {
+            if (gameState.upgrades.shield) {
+                gameState.shieldHealth--;
+                if (gameState.shieldHealth <= 0) {
+                    gameState.upgrades.shield = false;
+                }
+                return false;
+            } else {
+                gameOver();
+            }
+            return false;
+        }
+
+        return virus.y < canvas.height;
+    });
+
+    updateBuddy();
+}
+
+function updateBuddy() {
+    if (gameState.upgrades.buddy) {
+        gameState.buddies.forEach(buddy => {
+            if (buddy.isErratic) {
+                buddy.angle += (Math.random() - 0.5) * 0.5;
+                buddy.x += Math.cos(buddy.angle) * buddy.speed;
+                buddy.y += Math.sin(buddy.angle) * buddy.speed;
+                
+                if (buddy.x < 0 || buddy.x > canvas.width) buddy.angle = Math.PI - buddy.angle;
+                if (buddy.y < 0 || buddy.y > canvas.height) buddy.angle = -buddy.angle;
+            } else {
+                const time = Date.now() / 1000;
+                const offsetX = Math.sin(time) * 50;
+                const offsetY = Math.sin(time * 2) * 30;
+                buddy.x = player.x + offsetX;
+                buddy.y = player.y - 50 + offsetY;
+            }
+
+            if (Math.random() < 0.05) {
+                bullets.push({
+                    x: buddy.x + buddy.width / 2,
+                    y: buddy.y,
+                    speed: 8 * gameState.upgrades.speed,
+                    width: 8,
+                    height: 15,
+                    color: '#ffff90'
+                });
+            }
+        });
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = player.color;
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y + player.height);
+    ctx.lineTo(player.x + player.width / 2, player.y);
+    ctx.lineTo(player.x + player.width, player.y + player.height);
+    ctx.closePath();
+    ctx.fill();
+    
+    ctx.fillStyle = '#000814';
+    ctx.beginPath();
+    ctx.ellipse(player.x + player.width * 0.3, player.y + player.height * 0.4, 5, 8, Math.PI / 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(player.x + player.width * 0.7, player.y + player.height * 0.4, 5, 8, -Math.PI / 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    bullets.forEach(bullet => {
+        const gradient = ctx.createRadialGradient(
+            bullet.x, bullet.y, 0,
+            bullet.x, bullet.y, bullet.width
+        );
+        gradient.addColorStop(0, '#ffffff');
+        gradient.addColorStop(0.4, bullet.color);
+        gradient.addColorStop(1, 'transparent');
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, bullet.width, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = bullet.color;
+        ctx.fillRect(bullet.x - bullet.width / 2, bullet.y, bullet.width, bullet.height);
+    });
+    
+    viruses.forEach(virus => {
+        const scale = virus.scale || 1;
+        const centerX = virus.x + virus.width / 2;
+        const centerY = virus.y + virus.height / 2;
+        
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.scale(scale, scale);
+        
+        ctx.fillStyle = virus.type === 'pink' ? 'pink' : '#ff0000';
+        ctx.beginPath();
+        ctx.arc(0, 0, virus.width / 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('*', 0, 0);
+        
+        ctx.restore();
+    });
+
+    if (gameState.upgrades.shield) {
+        gameState.shieldOpacity = (gameState.shieldHealth / gameState.maxShieldHealth) * 0.8;
+        ctx.strokeStyle = `rgba(0, 255, 255, ${gameState.shieldOpacity})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(player.x + player.width/2, player.y + player.height/2, 
+                player.width * 0.8, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        const gradient = ctx.createRadialGradient(
+            player.x + player.width/2, player.y + player.height/2, player.width * 0.7,
+            player.x + player.width/2, player.y + player.height/2, player.width * 0.8
+        );
+        gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
+        gradient.addColorStop(1, `rgba(0, 255, 255, ${gameState.shieldOpacity * 0.3})`);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+    }
+
+    gameState.buddies.forEach(buddy => {
+        ctx.fillStyle = buddy.color;
+        ctx.beginPath();
+        ctx.moveTo(buddy.x, buddy.y + buddy.height);
+        ctx.lineTo(buddy.x + buddy.width / 2, buddy.y);
+        ctx.lineTo(buddy.x + buddy.width, buddy.y + buddy.height);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = '#000814';
+        ctx.beginPath();
+        ctx.ellipse(buddy.x + buddy.width * 0.3, buddy.y + buddy.height * 0.4, 3, 5, Math.PI / 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(buddy.x + buddy.width * 0.7, buddy.y + buddy.height * 0.4, 3, 5, -Math.PI / 4, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+function updateHUD() {
+    document.getElementById('score').textContent = gameState.score;
+    document.getElementById('coins').textContent = gameState.coins;
 }
 
 function gameOver() {
-  gameActive = false;
-  gameOverElement.style.display = 'block';
-  clearInterval(gameLoop);
-  clearInterval(virusLoop);
-  clearInterval(helperShootLoop);
-  helperMoveIntervals.forEach(interval => clearInterval(interval)); // Clear helper movement intervals
+    gameState.isPlaying = false;
+    mainMenu.style.display = 'flex';
+    gameContainer.classList.remove('playing');
+    bullets = [];
+    viruses = [];
+    gameState.buddies = [];
+    gameState.buddyCount = 0;
 }
 
-function startGame() {
-  score = 0;
-  health = 100;
-  coins = 0;
-  viruses.forEach(virus => gameContainer.removeChild(virus));
-  bullets.forEach(bullet => gameContainer.removeChild(bullet));
-  helpers.forEach(helper => gameContainer.removeChild(helper));
-  viruses = [];
-  bullets = [];
-  helpers = [];
-  scoreElement.textContent = '0';
-  coinsElement.textContent = '0';
-  healthElement.textContent = '100';
-  gameOverElement.style.display = 'none';
-  shopModal.style.display = 'none';
-  
-  // Clear existing helper movement intervals
-  helperMoveIntervals.forEach(interval => clearInterval(interval));
-  helperMoveIntervals = [];
-  
-  if (player) {
-    gameContainer.removeChild(player);
-  }
-  
-  createPlayer();
-  gameActive = true;
-  startScreen.style.display = 'none';
-  
-  gameLoop = setInterval(updateGame, 1000/60);
-  virusLoop = setInterval(createVirus, 3000); // Increased from 2000ms to 3000ms
-  helperShootLoop = setInterval(helperShoot, 1000);
+function togglePause() {
+    gameState.isPaused = !gameState.isPaused;
+    if (!gameState.isPaused) {
+        gameLoop();
+    }
 }
 
-document.addEventListener('mousemove', (e) => {
-  if (!gameActive) return;
-  const containerRect = gameContainer.getBoundingClientRect();
-  const x = e.clientX - containerRect.left;
-  if (x >= 0 && x <= gameContainer.offsetWidth - 60) {
-    player.style.left = x + 'px';
-    // Keep vertical position fixed at bottom
-    player.style.top = (gameContainer.offsetHeight - 80) + 'px';
-  }
-});
+function gameLoop() {
+    if (!gameState.isPlaying || gameState.isPaused) return;
+    
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
 
-document.addEventListener('click', (e) => {
-  if (!gameActive || e.target === startButton || e.target === retryButton) return;
-  const playerRect = player.getBoundingClientRect();
-  shoot(playerRect.left - gameContainer.getBoundingClientRect().left, playerRect.top - gameContainer.getBoundingClientRect().top);
-});
-
-startButton.addEventListener('click', startGame);
-retryButton.addEventListener('click', startGame);
-shopButton.addEventListener('click', openShop);
-buyHelperButton.addEventListener('click', buyHelper);
+handleInput();
 </script>
 </body></html>
