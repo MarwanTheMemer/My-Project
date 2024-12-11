@@ -1,4 +1,13 @@
-al, sans-serif;
+<html><head><base href="/" charset="UTF-8"><title>معركة الفيروسات!</title>
+<style>
+  body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Cg fill='white' fill-opacity='0.3'%3E%3Ccircle r='0.5' cx='10' cy='10'/%3E%3Ccircle r='0.5' cx='30' cy='20'/%3E%3Ccircle r='0.5' cx='50' cy='50'/%3E%3Ccircle r='0.5' cx='70' cy='30'/%3E%3Ccircle r='0.5' cx='90' cy='80'/%3E%3Ccircle r='0.5' cx='20' cy='70'/%3E%3Ccircle r='0.5' cx='40' cy='90'/%3E%3C/g%3E%3C/svg%3E");
+    font-family: Arial, sans-serif;
     overflow: hidden;
     direction: rtl; /* Added for right-to-left support */
   }
@@ -215,34 +224,29 @@ al, sans-serif;
 </style>
 </head>
 <body>
- <div id="gameContainer">
-    <div class="score">النقاط: <span id="scoreValue">0</span></div>
-    <div class="coins">العملات: <span id="coinsValue">0</span></div>
-    <div class="health">الصحة: <span id="healthValue">100</span></div>
-    <button class="shop-button laser-border" id="shopButton">المتجر</button>
-    <div class="shop-modal laser-border" id="shopModal">
-      <h2>المتجر</h2>
-      <div class="shop-item laser-border" data-cost="100" id="buyHelper">
-        شراء مساعد (100 عملة) - يساعد في إطلاق النار على الفيروسات
-      </div>
-      <button onclick="closeShop()" class="laser-border">إغلاق</button>
+<div id="gameContainer">
+  <div class="score">النقاط: <span id="scoreValue">0</span></div>
+  <div class="coins">العملات: <span id="coinsValue">0</span></div>
+  <div class="health">الصحة: <span id="healthValue">100</span></div>
+  <button class="shop-button" id="shopButton">المتجر</button>
+  <div class="shop-modal" id="shopModal">
+    <h2>المتجر</h2>
+    <div class="shop-item" data-cost="100" id="buyHelper">
+      شراء مساعد (100 عملة) - يساعد في إطلاق النار على الفيروسات
     </div>
-    <div class="game-over" id="gameOver">
-      انتهت اللعبة
-      <button class="retry-button laser-border" id="retryButton">إعادة المحاولة</button>
-    </div>
-    <div class="start-screen" id="startScreen">
-      <h1>معركة الفيروسات!</h1>
-      <p>تحرك بالماوس واضغط للتصويب!</p>
-      <button class="start-button laser-border" id="startButton">ابدأ اللعبة</button>
-    </div>
-    <div class="difficulty-screen laser-border" id="difficultyScreen">
-      <h1>اختر مستوى الصعوبة</h1>
-      <button class="laser-border" onclick="setDifficulty('easy')">سهل</button>
-      <button class="laser-border" onclick="setDifficulty('medium')">متوسط</button>
-      <button class="laser-border" onclick="setDifficulty('hard')">صعب</button>
-    </div>
+    <button onclick="closeShop()">إغلاق</button>
   </div>
+  <div class="game-over" id="gameOver">
+    انتهت اللعبة
+    <button class="retry-button" id="retryButton">إعادة المحاولة</button>
+  </div>
+  <div class="start-screen" id="startScreen">
+    <h1>معركة الفيروسات!</h1>
+    <p>تحرك بالماوس واضغط للتصويب!</p>
+    <button class="start-button" id="startButton">ابدأ اللعبة</button>
+  </div>
+</div>
+
 <script>
 const gameContainer = document.getElementById('gameContainer');
 const scoreElement = document.getElementById('scoreValue');
