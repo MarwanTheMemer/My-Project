@@ -368,41 +368,42 @@ body::before {
     padding: 20px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
+    height: 400px;
+    overflow-y: auto;
 }
 
-.level-button {
-    padding: 15px;
-    background: rgba(0, 255, 0, 0.05);
-    border: 2px solid #00ff00;
-    color: white;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
+.level-button:not(:disabled) {
+  position: relative;
+  padding: 15px;
+  background: rgba(0, 255, 0, 0.05);
+  border: 2px solid #00ff00;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s;
+}
+
+.level-button:not(:disabled)::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  animation: outlineTracer 2s linear infinite;
+}
+
+.level-button:not(:disabled):hover {
+  background: rgba(0, 255, 0, 0.1);
+  transform: scale(1.05);
 }
 
 .level-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     border-color: #666;
-}
-
-.level-button:not(:disabled)::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border: 2px solid transparent;
-    border-radius: 5px;
-    animation: outlineTracer 2s linear infinite;
-}
-
-.level-button:hover:not(:disabled) {
-    background: rgba(0, 255, 0, 0.1);
-    transform: scale(1.05);
 }
 </style>
 </head>
@@ -910,14 +911,25 @@ function gameOver() {
   fallingCoins = [];
   backgroundMusic.pause();
   if (!gameState.difficulty) {
-    deathScreen.style.display = 'flex';
-    deathScreen.style.background = 'rgba(255, 0, 0, 0.3)';
-    deathScreen.onclick = () => {
-      deathScreen.style.display = 'none';
-      levelMenu.style.display = 'flex';
-      gameContainer.classList.remove('playing');
-      resetGameState();
-    };
+    const jumpscare = document.querySelector('.jumpscare');
+    deathSound.currentTime = 0;
+    deathSound.play();
+    jumpscare.style.display = 'flex';
+    jumpscare.style.background = '#ff0000';
+    const scaryFace = document.querySelector('.scary-face');
+    scaryFace.style.fontSize = '200px';
+    scaryFace.style.textShadow = '0 0 30px #ff0000, 0 0 60px #ff0000';
+    setTimeout(() => {
+      jumpscare.style.display = 'none';
+      deathScreen.style.display = 'flex';
+      deathScreen.style.background = 'rgba(255, 0, 0, 0.3)';
+      deathScreen.onclick = () => {
+        deathScreen.style.display = 'none';
+        levelMenu.style.display = 'flex';
+        gameContainer.classList.remove('playing');
+        resetGameState();
+      };
+    }, 300);
   } else {
     const jumpscare = document.querySelector('.jumpscare');
     deathSound.currentTime = 0;
@@ -1056,11 +1068,10 @@ function backToMainMenu() {
 function populateLevelButtons() {
   const container = document.getElementById('levelButtons');
   container.innerHTML = '';
-  for (let i = 1; i <= 50; i++) {
+  for (let i = 1; i <= maxUnlockedLevel; i++) {
     const button = document.createElement('button');
     button.className = 'level-button';
     button.textContent = i;
-    button.disabled = i > maxUnlockedLevel;
     button.onclick = () => startLevel(i);
     container.appendChild(button);
   }
@@ -1074,6 +1085,7 @@ function startLevel(level) {
   gameContainer.classList.add('playing');
   gameState.score = 0;
   gameState.coins = 0;
+  gameState.difficulty = null;
   levelStartTime = Date.now();
   gameLoop();
   backgroundMusic.currentTime = 0;
@@ -1100,6 +1112,7 @@ function startNextLevel() {
   clickSound.currentTime = 0;
   clickSound.play();
   levelComplete.style.display = 'none';
+  maxUnlockedLevel = Math.max(maxUnlockedLevel, currentLevel);
   if (currentLevel < 50) {
     startLevel(currentLevel + 1);
   } else {
@@ -1119,6 +1132,7 @@ function resetGameState() {
     shield: false,
     buddy: false
   };
+  maxUnlockedLevel = Math.max(maxUnlockedLevel, currentLevel);
   updateHUD();
 }
 handleInput();
