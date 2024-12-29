@@ -578,19 +578,19 @@ function closeShop() {
 }
 function purchaseUpgrade(type) {
   if (type === 'speed' && gameState.coins >= 100) {
-    gameState.coins -= 100000000;
+    gameState.coins -= 100;
     gameState.upgrades.speed += 0.2;
     purchaseSound.currentTime = 0;
     purchaseSound.play();
   } else if (type === 'shield' && gameState.coins >= 200) {
-    gameState.coins -= 200000000;
+    gameState.coins -= 200;
     gameState.upgrades.shield = true;
     gameState.shieldHealth = gameState.maxShieldHealth;
     gameState.shieldOpacity = 1;
     purchaseSound.currentTime = 0;
     purchaseSound.play();
   } else if (type === 'buddy' && gameState.coins >= 300) {
-    gameState.coins -= 30000000;
+    gameState.coins -= 300;
     gameState.upgrades.buddy = true;
     gameState.buddyCount++;
     const newBuddy = {
