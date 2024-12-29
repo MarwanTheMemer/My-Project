@@ -215,6 +215,13 @@ body::before {
   color: white;
   cursor: pointer;
   border-radius: 5px;
+#hud button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    background: #005500;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
 }
 </style>
 </head>
@@ -603,5 +610,90 @@ function gameLoop() {
 }
 
 handleInput();
-</script>
-</body></html>
+<script>
+let areas = [
+    { name: "Area 1", unlocked: true, cost: 0 },
+    { name: "Area 2", unlocked: false, cost: 500 },
+    { name: "Area 3", unlocked: false, cost: 1500 },
+];
+
+let pets = [];
+let rebirths = 0;
+
+function addPet() {
+    if (gameState.coins >= 1000) {
+        gameState.coins -= 1000;
+        const petMultiplier = 1 + pets.length * 0.5;
+        pets.push({ name: `Pet ${pets.length + 1}`, multiplier: petMultiplier });
+
+        const petMessage = document.createElement('div');
+        petMessage.innerText = `You hatched a Pet with x${petMultiplier} multiplier!`;
+        petMessage.style.cssText = "color: yellow; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);";
+        document.body.appendChild(petMessage);
+        setTimeout(() => petMessage.remove(), 3000);
+
+        updateHUD();
+    } else {
+        alert("Not enough coins to hatch a pet!");
+    }
+}
+
+function applyPetMultipliers() {
+    const totalMultiplier = pets.reduce((acc, pet) => acc + pet.multiplier, 1);
+    return totalMultiplier;
+}
+
+function rebirth() {
+    if (gameState.coins >= 5000) {
+        gameState.coins = 0;
+        gameState.score = 0;
+        gameState.upgrades = { speed: 1, shield: false, buddy: false };
+        pets = [];
+        rebirths++;
+        alert(`Rebirth complete! Total rebirths: ${rebirths}`);
+        updateHUD();
+    } else {
+        alert("Not enough coins for rebirth!");
+    }
+}
+
+function unlockArea(areaIndex) {
+    const area = areas[areaIndex];
+    if (gameState.coins >= area.cost && !area.unlocked) {
+        gameState.coins -= area.cost;
+        area.unlocked = true;
+        alert(`${area.name} unlocked!`);
+        updateHUD();
+    } else if (area.unlocked) {
+        alert(`${area.name} is already unlocked!`);
+    } else {
+        alert("Not enough coins to unlock this area!");
+    }
+}
+
+function updateHUD() {
+    document.getElementById("score").innerText = gameState.score;
+    document.getElementById("coins").innerText = gameState.coins;
+    document.getElementById("rebirths").innerText = rebirths;
+}
+
+function renderAreas() {
+    const hud = document.getElementById('hud');
+    areas.forEach((area, index) => {
+        const areaButton = document.createElement('button');
+        areaButton.innerText = area.unlocked ? `${area.name} (Unlocked)` : `${area.name} (Unlock: ${area.cost} Coins)`;
+        areaButton.onclick = () => unlockArea(index);
+        hud.appendChild(areaButton);
+    });
+}
+
+// Call this function in the initialization section.
+function initializeGame() {
+    renderAreas();
+    handleInput();
+    resizeCanvas();
+}
+initializeGame();
+<span>Rebirths: <span id="rebirths">0</span></span>
+<button onclick="addPet()">Hatch a Pet (1000 Coins)</button>
+
