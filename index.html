@@ -1,10 +1,6 @@
-<html><head><base href="." />
+<html><head><base href=".">
 <meta charset="UTF-8">
-<title>مكافحة الفيروسات - Virus Battle</title>
-<style>
-:root {<html><head><base href="." />
-<meta charset="UTF-8">
-<title>مكافحة الفيروسات - Virus Battle</title>
+<title>مكافحة الفيروسات</title>
 <style>
 :root {
   --primary: #2196f3;
@@ -104,6 +100,13 @@ body::before {
   border-radius: 10px;
 }
 
+.menu > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 5px 0;
+}
+
 .laser-button {
   position: relative;
   padding: 15px 30px;
@@ -220,614 +223,140 @@ body::before {
   cursor: pointer;
   border-radius: 5px;
 }
-</style>
-</head>
-<body>
-<div id="gameContainer">
-    <canvas id="gameCanvas"></canvas>
-    <div id="hud">
-        النقاط: <span id="score">0</span>
-        العملات: <span id="coins">0</span>
-        <span class="shop-icon" onclick="openShop()">🛍️ المتجر</span>
-    </div>
-    <button id="pauseButton" onclick="togglePause()">⏸️ إيقاف مؤقت</button>
-    <div id="mainMenu" class="menu">
-        <h1>مكافحة الفيروسات</h1>
-        <button class="laser-button" onclick="startGame('easy')">سهل</button>
-        <button class="laser-button" onclick="startGame('medium')">متوسط</button>
-        <button class="laser-button" onclick="startGame('hard')">صعب</button>
-    </div>
-    <div id="shopMenu">
-        <h2>المتجر</h2>
-        <div class="upgrade" onclick="purchaseUpgrade('speed')">
-            سرعة أكبر (100 عملة)
-        </div>
-        <div class="upgrade" onclick="purchaseUpgrade('shield')">
-            درع واقي (200 عملة)
-        </div>
-        <div class="upgrade" onclick="purchaseUpgrade('buddy')">
-            صديق (300 عملة)
-        </div>
-        <button class="laser-button" onclick="closeShop()">عودة</button>
-    </div>
-</div>
 
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const mainMenu = document.getElementById('mainMenu');
-const shopMenu = document.getElementById('shopMenu');
-const gameContainer = document.getElementById('gameContainer');
-
-let gameState = {
-    score: 0,
-    coins: 0,
-    isPlaying: false,
-    difficulty: 'easy',
-    isPaused: false,
-    shieldHealth: 2,
-    maxShieldHealth: 2,
-    shieldOpacity: 1,
-    buddyCount: 0,
-    buddies: [],
-    upgrades: {
-        speed: 1,
-        shield: false,
-        buddy: false
-    }
-};
-
-let player = {
-    x: 400,
-    y: 550,
-    width: 60,
-    height: 40,
-    speed: 5,
-    color: '#00ff00'
-};
-
-let bullets = [];
-let viruses = [];
-let lastSpawn = 0;
-
-function resizeCanvas() {
-    canvas.width = gameContainer.clientWidth;
-    canvas.height = gameContainer.clientHeight;
-}
-
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-function startGame(difficulty) {
-    gameState.difficulty = difficulty;
-    gameState.isPlaying = true;
-    mainMenu.style.display = 'none';
-    gameContainer.classList.add('playing');
-    gameLoop();
-}
-
-function openShop() {
-    shopMenu.style.display = 'block';
-}
-
-function closeShop() {
-    shopMenu.style.display = 'none';
-}
-
-function purchaseUpgrade(type) {
-    if (type === 'speed' && gameState.coins >= 100) {
-        gameState.coins -= 100;
-        gameState.upgrades.speed += 0.2;
-    } else if (type === 'shield' && gameState.coins >= 200) {
-        gameState.coins -= 200;
-        gameState.upgrades.shield = true;
-        gameState.shieldHealth = gameState.maxShieldHealth;
-        gameState.shieldOpacity = 1;
-    } else if (type === 'buddy' && gameState.coins >= 300) {
-        gameState.coins -= 300;
-        gameState.upgrades.buddy = true;
-        gameState.buddyCount++;
-        
-        const newBuddy = {
-            x: player.x,
-            y: player.y,
-            width: 30,
-            height: 30,
-            color: '#ffff00',
-            angle: Math.random() * Math.PI * 2,
-            speed: gameState.buddyCount > 1 ? 8 : 3,
-            isErratic: gameState.buddyCount > 1
-        };
-        
-        gameState.buddies.push(newBuddy);
-    }
-    updateHUD();
-}
-
-function handleInput() {
-    window.onmousemove = (e) => {
-        const rect = canvas.getBoundingClientRect();
-        player.x = Math.max(0, Math.min(e.clientX - rect.left - player.width / 2, canvas.width - player.width));
-    };
-
-    window.onkeydown = (e) => {
-        if (e.code === 'Space') {
-            shoot();
-        }
-    };
-
-    canvas.onclick = () => shoot();
-}
-
-function shoot() {
-    if (!gameState.isPlaying || gameState.isPaused) return;
-    bullets.push({
-        x: player.x + player.width / 2,
-        y: player.y,
-        speed: 10 * gameState.upgrades.speed,
-        width: 12,
-        height: 20,
-        color: '#90ff90'
-    });
-}
-
-function spawnVirus() {
-    const now = Date.now();
-    const spawnRate = gameState.difficulty === 'easy' ? 1000 :
-                     gameState.difficulty === 'medium' ? 750 : 500;
-    
-    if (now - lastSpawn >= spawnRate) {
-        const virusCount = gameState.difficulty === 'hard' ? 3 : 1;
-        
-        for(let i = 0; i < virusCount; i++) {
-            const virusType = Math.random() < 0.5 ? 'regular' : 'pink';
-            viruses.push({
-                x: Math.random() * (canvas.width - 30),
-                y: -30,
-                width: 30,
-                height: 30,
-                speed: gameState.difficulty === 'easy' ? 2 :
-                       gameState.difficulty === 'medium' ? 3 : 4,
-                type: virusType,
-                scale: 1
-            });
-        }
-        lastSpawn = now;
-    }
-}
-
-function update() {
-    if (gameState.isPaused) return;
-
-    spawnVirus();
-    
-    bullets = bullets.filter(bullet => {
-        bullet.y -= bullet.speed;
-        return bullet.y > 0;
-    });
-
-    viruses = viruses.filter(virus => {
-        virus.y += virus.speed;
-        virus.scale = 1 + Math.sin(Date.now() / 200) * 0.2;
-        
-        const hitBullet = bullets.find(bullet => 
-            bullet.x < virus.x + virus.width &&
-            bullet.x + bullet.width > virus.x &&
-            bullet.y < virus.y + virus.height &&
-            bullet.y + bullet.height > virus.y
-        );
-
-        if (hitBullet) {
-            gameState.score += 10;
-            gameState.coins += gameState.difficulty === 'easy' ? 10 :
-                              gameState.difficulty === 'medium' ? 20 : 30;
-            updateHUD();
-            bullets = bullets.filter(b => b !== hitBullet);
-            return false;
-        }
-
-        if (virus.y + virus.height > player.y &&
-            virus.x < player.x + player.width &&
-            virus.x + virus.width > player.x) {
-            if (gameState.upgrades.shield) {
-                gameState.shieldHealth--;
-                if (gameState.shieldHealth <= 0) {
-                    gameState.upgrades.shield = false;
-                }
-                return false;
-            } else {
-                gameOver();
-            }
-            return false;
-        }
-
-        return virus.y < canvas.height;
-    });
-
-    updateBuddy();
-}
-
-function updateBuddy() {
-    if (gameState.upgrades.buddy) {
-        gameState.buddies.forEach(buddy => {
-            if (buddy.isErratic) {
-                buddy.angle += (Math.random() - 0.5) * 0.5;
-                buddy.x += Math.cos(buddy.angle) * buddy.speed;
-                buddy.y += Math.sin(buddy.angle) * buddy.speed;
-                
-                if (buddy.x < 0 || buddy.x > canvas.width) buddy.angle = Math.PI - buddy.angle;
-                if (buddy.y < 0 || buddy.y > canvas.height) buddy.angle = -buddy.angle;
-            } else {
-                const time = Date.now() / 1000;
-                const offsetX = Math.sin(time) * 50;
-                const offsetY = Math.sin(time * 2) * 30;
-                buddy.x = player.x + offsetX;
-                buddy.y = player.y - 50 + offsetY;
-            }
-
-            if (Math.random() < 0.05) {
-                bullets.push({
-                    x: buddy.x + buddy.width / 2,
-                    y: buddy.y,
-                    speed: 8 * gameState.upgrades.speed,
-                    width: 8,
-                    height: 15,
-                    color: '#ffff90'
-                });
-            }
-        });
-    }
-}
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.fillStyle = player.color;
-    ctx.beginPath();
-    ctx.moveTo(player.x, player.y + player.height);
-    ctx.lineTo(player.x + player.width / 2, player.y);
-    ctx.lineTo(player.x + player.width, player.y + player.height);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.fillStyle = '#000814';
-    ctx.beginPath();
-    ctx.ellipse(player.x + player.width * 0.3, player.y + player.height * 0.4, 5, 8, Math.PI / 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(player.x + player.width * 0.7, player.y + player.height * 0.4, 5, 8, -Math.PI / 4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    bullets.forEach(bullet => {
-        const gradient = ctx.createRadialGradient(
-            bullet.x, bullet.y, 0,
-            bullet.x, bullet.y, bullet.width
-        );
-        gradient.addColorStop(0, '#ffffff');
-        gradient.addColorStop(0.4, bullet.color);
-        gradient.addColorStop(1, 'transparent');
-        
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(bullet.x, bullet.y, bullet.width, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = bullet.color;
-        ctx.fillRect(bullet.x - bullet.width / 2, bullet.y, bullet.width, bullet.height);
-    });
-    
-    viruses.forEach(virus => {
-        const scale = virus.scale || 1;
-        const centerX = virus.x + virus.width / 2;
-        const centerY = virus.y + virus.height / 2;
-        
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.scale(scale, scale);
-        
-        ctx.fillStyle = virus.type === 'pink' ? 'pink' : '#ff0000';
-        ctx.beginPath();
-        ctx.arc(0, 0, virus.width / 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('*', 0, 0);
-        
-        ctx.restore();
-    });
-
-    if (gameState.upgrades.shield) {
-        gameState.shieldOpacity = (gameState.shieldHealth / gameState.maxShieldHealth) * 0.8;
-        ctx.strokeStyle = rgba(0, 255, 255, ${gameState.shieldOpacity});
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(player.x + player.width/2, player.y + player.height/2, 
-                player.width * 0.8, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        const gradient = ctx.createRadialGradient(
-            player.x + player.width/2, player.y + player.height/2, player.width * 0.7,
-            player.x + player.width/2, player.y + player.height/2, player.width * 0.8
-        );
-        gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
-        gradient.addColorStop(1, rgba(0, 255, 255, ${gameState.shieldOpacity * 0.3}));
-        ctx.fillStyle = gradient;
-        ctx.fill();
-    }
-
-    gameState.buddies.forEach(buddy => {
-        ctx.fillStyle = buddy.color;
-        ctx.beginPath();
-        ctx.moveTo(buddy.x, buddy.y + buddy.height);
-        ctx.lineTo(buddy.x + buddy.width / 2, buddy.y);
-        ctx.lineTo(buddy.x + buddy.width, buddy.y + buddy.height);
-        ctx.closePath();
-        ctx.fill();
-        
-        ctx.fillStyle = '#000814';
-        ctx.beginPath();
-        ctx.ellipse(buddy.x + buddy.width * 0.3, buddy.y + buddy.height * 0.4, 3, 5, Math.PI / 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(buddy.x + buddy.width * 0.7, buddy.y + buddy.height * 0.4, 3, 5, -Math.PI / 4, 0, Math.PI * 2);
-        ctx.fill();
-    });
-}
-
-function updateHUD() {
-    document.getElementById('score').textContent = gameState.score;
-    document.getElementById('coins').textContent = gameState.coins;
-}
-
-function gameOver() {
-    gameState.isPlaying = false;
-    mainMenu.style.display = 'flex';
-    gameContainer.classList.remove('playing');
-    bullets = [];
-    viruses = [];
-    gameState.buddies = [];
-    gameState.buddyCount = 0;
-}
-
-function togglePause() {
-    gameState.isPaused = !gameState.isPaused;
-    if (!gameState.isPaused) {
-        gameLoop();
-    }
-}
-
-function gameLoop() {
-    if (!gameState.isPlaying || gameState.isPaused) return;
-    
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-handleInput();
-</script>
-</body></html>
-  --primary: #2196f3;
-  --background: #000814;
-  --text: #ffffff;
-}
-
-@keyframes stars {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes borderAnimation {
-  0% { border-color: #00ff00; }
-  25% { border-color: #ff00ff; }
-  50% { border-color: #00ffff; }
-  75% { border-color: #ffff00; }
-  100% { border-color: #00ff00; }
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--background);
-  color: var(--text);
-  font-family: 'Cairo', Arial, sans-serif;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  direction: rtl;
-  position: relative;
-}
-
-body::before {
-  content: '';
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  top: -50%;
-  left: -50%;
-  background-image: 
-    radial-gradient(2px 2px at 40px 60px, #fff, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 20px 50px, #fff9, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 30px 100px, #fff9, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 40px 60px, #fff9, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 110px 90px, #fff9, rgba(0,0,0,0)),
-    radial-gradient(2px 2px at 190px 150px, #fff9, rgba(0,0,0,0));
-  background-repeat: repeat;
-  background-size: 200px 200px;
-  animation: stars 100s linear infinite;
-  z-index: -1;
-}
-
-#gameContainer {
-  position: relative;
-  width: 800px;
-  height: 600px;
-  background: rgba(0,20,40,0.8);
-  border-radius: 10px;
-  border: 3px solid #00aa00;
-  box-shadow: 
-    0 0 15px rgba(0, 255, 0, 0.4),
-    0 0 30px rgba(0, 255, 0, 0.2),
-    0 0 45px rgba(0, 255, 0, 0.1),
-    inset 0 0 20px rgba(0, 255, 0, 0.2);
-}
-
-#gameContainer.playing {
-  animation: borderAnimation 3s linear infinite;
-  box-shadow: 
-    0 0 20px rgba(0, 255, 0, 0.5),
-    0 0 40px rgba(0, 255, 0, 0.3),
-    0 0 60px rgba(0, 255, 0, 0.2),
-    inset 0 0 30px rgba(0, 255, 0, 0.3);
-}
-
-#gameCanvas {
+.death-screen {
   position: absolute;
   top: 0;
   left: 0;
-  border-radius: 10px;
-}
-
-.menu {
-  position: absolute;
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  display: none;
   justify-content: center;
   align-items: center;
-  gap: 20px;
-  z-index: 10;
-  background: rgba(0,8,20,0.9);
+  z-index: 100;
+  animation: flashColors 0.5s linear;
+  background: rgba(0,0,0,0.8);
+  cursor: pointer;
+}
+
+.death-toast {
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 20px 40px;
   border-radius: 10px;
-}
-
-.laser-button {
-  position: relative;
-  padding: 15px 30px;
   font-size: 24px;
-  background: rgba(0, 255, 0, 0.05);
-  color: var(--text);
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: all 0.3s;
+  text-align: center;
+  animation: shake 0.5s linear;
 }
 
-.laser-button::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border: 2px solid transparent;
-  border-radius: 5px;
-  animation: outlineTracer 2s linear infinite;
+@keyframes flashColors {
+  0% { background: #000; }
+  25% { background: #fff; }
+  50% { background: #000; }
+  75% { background: #fff; }
+  100% { background: transparent; }
 }
 
-@keyframes outlineTracer {
-  0% {
-    clip-path: inset(0 98% 0 0);
-    border-color: #00ff00;
-  }
-  25% {
-    clip-path: inset(0 0 98% 0);
-    border-color: #ff00ff;
-  }
-  50% {
-    clip-path: inset(0 0 0 98%);
-    border-color: #00ffff;
-  }
-  75% {
-    clip-path: inset(98% 0 0 0);
-    border-color: #ffff00;
-  }
-  100% {
-    clip-path: inset(0 98% 0 0);
-    border-color: #00ff00;
-  }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
 }
 
-.laser-button:hover {
-  background: rgba(0, 255, 0, 0.1);
-  transform: scale(1.05);
-}
-
-.laser-button:hover::before {
-  filter: brightness(1.5);
-  box-shadow: 
-    0 0 15px rgba(0, 255, 0, 0.6),
-    0 0 30px rgba(0, 255, 0, 0.4);
-}
-
-#hud {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 20px;
-  padding: 10px;
-  background: rgba(0,0,0,0.5);
-  border-radius: 5px;
-  display: flex;
-  gap: 20px;
-}
-
-.shop-icon {
-  cursor: pointer;
-  padding: 5px 10px;
-  background: rgba(0,255,0,0.2);
-  border-radius: 5px;
-  margin-left: 20px;
-}
-
-#shopMenu {
+.jumpscare {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: none;
-  position: absolute;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: jumpscare-flash 0.3s linear;
+}
+
+@keyframes jumpscare-flash {
+  0% { background: #000; }
+  20% { background: #f00; }
+  40% { background: #000; }
+  60% { background: #fff; }
+  80% { background: #f00; }
+  100% { background: #000; }
+}
+
+.scary-face {
+  font-size: 150px;
+  color: red;
+  animation: shake-violent 0.3s linear;
+  text-shadow: 0 0 20px #f00;
+}
+
+@keyframes shake-violent {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  10% { transform: translate(-10px, 10px) scale(1.2); }
+  20% { transform: translate(10px, -10px) scale(0.8); }
+  30% { transform: translate(-15px, -15px) scale(1.4); }
+  40% { transform: translate(15px, 15px) scale(0.9); }
+  50% { transform: translate(-10px, 10px) scale(1.3); }
+  60% { transform: translate(10px, -10px) scale(0.7); }
+  70% { transform: translate(-15px, 15px) scale(1.2); }
+  80% { transform: translate(15px, -15px) scale(0.9); }
+  90% { transform: translate(-10px, -10px) scale(1.1); }
+}
+
+.difficulty-image {
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0,20,40,0.95);
-  padding: 20px;
-  border-radius: 10px;
-  z-index: 20;
-  border: 2px solid #00ff00;
+  width: 300px;
+  height: 300px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1000;
+  transition: opacity 0.3s;
 }
 
-.upgrade {
-  margin: 10px 0;
-  padding: 10px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.3s;
+.character-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 300px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: popIn 1s ease-out forwards;
+  text-align: center;
 }
 
-.upgrade:hover {
-  background: rgba(255,255,255,0.2);
+.character-popup img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  margin-bottom: 20px;
 }
 
-#pauseButton {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  padding: 5px 10px;
-  background: rgba(0,255,0,0.2);
-  border: 1px solid #00ff00;
+.character-popup .message {
+  font-size: 24px;
   color: white;
-  cursor: pointer;
-  border-radius: 5px;
-#hud button {
-    margin-top: 10px;
-    padding: 5px 10px;
-    background: #005500;
-    color: #fff;
-    border-radius: 5px;
-    cursor: pointer;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  font-family: 'Cairo', Arial, sans-serif;
+}
+
+@keyframes popIn {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@keyframes popOut {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
 }
 </style>
 </head>
@@ -835,471 +364,741 @@ body::before {
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     <div id="hud">
-        النقاط: <span id="score">0</span>
+       النقاط: <span id="score">0</span>
         العملات: <span id="coins">0</span>
-        <span class="shop-icon" onclick="openShop()">🛍️ المتجر</span>
+        <span class="shop-icon" onclick="openShop()">&#x1f6cd;&#xfe0f; المتجر</span>
     </div>
-    <button id="pauseButton" onclick="togglePause()">⏸️ إيقاف مؤقت</button>
+    <button id="pauseButton" onclick="togglePause()">&#x23f8;&#xfe0f; إيقاف مؤقت</button>
     <div id="mainMenu" class="menu">
-        <h1>مكافحة الفيروسات</h1>
-        <button class="laser-button" onclick="startGame('easy')">سهل</button>
-        <button class="laser-button" onclick="startGame('medium')">متوسط</button>
-        <button class="laser-button" onclick="startGame('hard')">صعب</button>
+        <h1>
+            مكافحة الفيروسات
+            <img src="bloeh.png" style="width: 50px; height: 50px; vertical-align: middle; margin: 0 10px;">
+        </h1>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="laser-button" onclick="startGame('easy')">سهل</button>
+            <img src="COUUUUUUUTE.webp" style="width: 40px; height: 40px; vertical-align: middle;">
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="laser-button" onclick="startGame('medium')">متوسط</button>
+            <img src="mid.webp" style="width: 40px; height: 40px; vertical-align: middle;">
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="laser-button" onclick="startGame('hard')">صعب</button>
+            <img src="scared.webp" style="width: 40px; height: 40px; vertical-align: middle;">
+        </div>
     </div>
     <div id="shopMenu">
         <h2>المتجر</h2>
         <div class="upgrade" onclick="purchaseUpgrade('speed')">
-            سرعة أكبر (100 عملة)
+            السرعة (100 عملة)
         </div>
         <div class="upgrade" onclick="purchaseUpgrade('shield')">
-            درع واقي (200 عملة)
+            الدرع (200 عملة)  
         </div>
         <div class="upgrade" onclick="purchaseUpgrade('buddy')">
-            صديق (300 عملة)
+            المساعد (300 عملة)
         </div>
         <button class="laser-button" onclick="closeShop()">عودة</button>
     </div>
 </div>
+<div id="deathScreen" class="death-screen">
+  <div class="death-toast">لقد خسرت!</div>
+</div>
+<div class="jumpscare">
+  <div class="scary-face">&#x1f47b;</div>
+</div>
+<audio id="backgroundMusic" loop>
+  <source src="relaxedscene.mp3" type="audio/mpeg">
+</audio>
 
-<script>
-const canvas = document.getElementById('gameCanvas');
+<script>const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const mainMenu = document.getElementById('mainMenu');
 const shopMenu = document.getElementById('shopMenu');
 const gameContainer = document.getElementById('gameContainer');
-
+const deathScreen = document.getElementById('deathScreen');
+let backgroundMusic = document.getElementById('backgroundMusic');
+backgroundMusic.loop = true;
+backgroundMusic.volume = 0.3;
 let gameState = {
-    score: 0,
-    coins: 0,
-    isPlaying: false,
-    difficulty: 'easy',
-    isPaused: false,
-    shieldHealth: 2,
-    maxShieldHealth: 2,
-    shieldOpacity: 1,
-    buddyCount: 0,
-    buddies: [],
-    upgrades: {
-        speed: 1,
-        shield: false,
-        buddy: false
-    }
+  score: 0,
+  coins: 0,
+  isPlaying: false,
+  difficulty: 'easy',
+  isPaused: false,
+  shieldHealth: 2,
+  maxShieldHealth: 2,
+  shieldOpacity: 1,
+  buddyCount: 0,
+  buddies: [],
+  upgrades: {
+    speed: 1,
+    shield: false,
+    buddy: false
+  },
+  lastToastAppearance: 0,
+  toastKills: 0,
+  toastActive: false,
+  difficultyButtonCooldown: false,
+  isFirstRound: true
 };
-
+let fallingCoins = [];
+const coinImage = new Image();
+coinImage.src = 'Coin.png';
+const coinSound = new Audio('CoinRecieved.mp3');
+const deathSound = new Audio('ELODeath.wav');
+const popSound = new Audio('Pop.mp3');
+const difficultySound = new Audio('3506d0ac-c65a-4039-bfb4-d82001d557a5.wav');
+const shootSound = new Audio('Shoot.mp3');
+const clickSound = new Audio('Click.mp3');
+const startButtonSound = new Audio('Start.wav');
+const pauseSound = new Audio('Pause.mp3');
+const unpauseSound = new Audio('Unpause.mp3');
+const purchaseSound = new Audio('Purchase.mp3');
+let debrisParticles = [];
 let player = {
-    x: 400,
-    y: 550,
-    width: 60,
-    height: 40,
-    speed: 5,
-    color: '#00ff00'
+  x: 400,
+  y: 550,
+  width: 60,
+  height: 40,
+  speed: 5,
+  color: '#00ff00'
 };
-
 let bullets = [];
 let viruses = [];
 let lastSpawn = 0;
-
+let toastMonster = {
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100,
+  color: '#ffffff',
+  active: false,
+  targetedViruses: [],
+  fadeLevel: 1
+};
+const rainbowCat = new Image();
+rainbowCat.src = 'Rainbow cat.gif';
+let lastRainbowCatScore = 0;
+let rainbowCatActive = false;
+let rainbowCatX = -100;
 function resizeCanvas() {
-    canvas.width = gameContainer.clientWidth;
-    canvas.height = gameContainer.clientHeight;
+  canvas.width = gameContainer.clientWidth;
+  canvas.height = gameContainer.clientHeight;
 }
-
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
-
 function startGame(difficulty) {
-    gameState.difficulty = difficulty;
-    gameState.isPlaying = true;
-    mainMenu.style.display = 'none';
-    gameContainer.classList.add('playing');
-    gameLoop();
-}
+  if (gameState.difficultyButtonCooldown) {
+    return; // Exit if buttons are on cooldown
+  }
+  
+  // Set cooldown
+  gameState.difficultyButtonCooldown = true;
+  
+  // Disable all difficulty buttons visually
+  const difficultyButtons = document.querySelectorAll('.laser-button');
+  difficultyButtons.forEach(btn => {
+    btn.style.opacity = '0.5';
+    btn.style.pointerEvents = 'none';
+  });
 
-function openShop() {
-    shopMenu.style.display = 'block';
-}
+  const imageMap = {
+    'easy': 'COUUUUUUUTE.webp',
+    'medium': 'mid.webp',
+    'hard': 'scared.webp'
+  };
 
-function closeShop() {
-    shopMenu.style.display = 'none';
-}
+  const img = document.createElement('img');
+  img.src = imageMap[difficulty];
+  img.className = 'difficulty-image';
+  img.style.opacity = '0';
+  document.body.appendChild(img);
+  
+  setTimeout(() => {
+    img.style.opacity = '1';
+  }, 10);
 
-function purchaseUpgrade(type) {
-    if (type === 'speed' && gameState.coins >= 100) {
-        gameState.coins -= 100;
-        gameState.upgrades.speed += 0.2;
-    } else if (type === 'shield' && gameState.coins >= 200) {
-        gameState.coins -= 200;
-        gameState.upgrades.shield = true;
-        gameState.shieldHealth = gameState.maxShieldHealth;
-        gameState.shieldOpacity = 1;
-    } else if (type === 'buddy' && gameState.coins >= 300) {
-        gameState.coins -= 300;
-        gameState.upgrades.buddy = true;
-        gameState.buddyCount++;
-        
-        const newBuddy = {
-            x: player.x,
-            y: player.y,
-            width: 30,
-            height: 30,
-            color: '#ffff00',
-            angle: Math.random() * Math.PI * 2,
-            speed: gameState.buddyCount > 1 ? 8 : 3,
-            isErratic: gameState.buddyCount > 1
-        };
-        
-        gameState.buddies.push(newBuddy);
-    }
-    updateHUD();
-}
-
-function handleInput() {
-    window.onmousemove = (e) => {
-        const rect = canvas.getBoundingClientRect();
-        player.x = Math.max(0, Math.min(e.clientX - rect.left - player.width / 2, canvas.width - player.width));
-    };
-
-    window.onkeydown = (e) => {
-        if (e.code === 'Space') {
-            shoot();
-        }
-    };
-
-    canvas.onclick = () => shoot();
-}
-
-function shoot() {
-    if (!gameState.isPlaying || gameState.isPaused) return;
-    bullets.push({
-        x: player.x + player.width / 2,
-        y: player.y,
-        speed: 10 * gameState.upgrades.speed,
-        width: 12,
-        height: 20,
-        color: '#90ff90'
-    });
-}
-
-function spawnVirus() {
-    const now = Date.now();
-    const spawnRate = gameState.difficulty === 'easy' ? 1000 :
-                     gameState.difficulty === 'medium' ? 750 : 500;
-    
-    if (now - lastSpawn >= spawnRate) {
-        const virusCount = gameState.difficulty === 'hard' ? 3 : 1;
-        
-        for(let i = 0; i < virusCount; i++) {
-            const virusType = Math.random() < 0.5 ? 'regular' : 'pink';
-            viruses.push({
-                x: Math.random() * (canvas.width - 30),
-                y: -30,
-                width: 30,
-                height: 30,
-                speed: gameState.difficulty === 'easy' ? 2 :
-                       gameState.difficulty === 'medium' ? 3 : 4,
-                type: virusType,
-                scale: 1
-            });
-        }
-        lastSpawn = now;
-    }
-}
-
-function update() {
-    if (gameState.isPaused) return;
-
-    spawnVirus();
-    
-    bullets = bullets.filter(bullet => {
-        bullet.y -= bullet.speed;
-        return bullet.y > 0;
-    });
-
-    viruses = viruses.filter(virus => {
-        virus.y += virus.speed;
-        virus.scale = 1 + Math.sin(Date.now() / 200) * 0.2;
-        
-        const hitBullet = bullets.find(bullet => 
-            bullet.x < virus.x + virus.width &&
-            bullet.x + bullet.width > virus.x &&
-            bullet.y < virus.y + virus.height &&
-            bullet.y + bullet.height > virus.y
-        );
-
-        if (hitBullet) {
-            gameState.score += 10;
-            gameState.coins += gameState.difficulty === 'easy' ? 10 :
-                              gameState.difficulty === 'medium' ? 20 : 30;
-            updateHUD();
-            bullets = bullets.filter(b => b !== hitBullet);
-            return false;
-        }
-
-        if (virus.y + virus.height > player.y &&
-            virus.x < player.x + player.width &&
-            virus.x + virus.width > player.x) {
-            if (gameState.upgrades.shield) {
-                gameState.shieldHealth--;
-                if (gameState.shieldHealth <= 0) {
-                    gameState.upgrades.shield = false;
-                }
-                return false;
-            } else {
-                gameOver();
-            }
-            return false;
-        }
-
-        return virus.y < canvas.height;
-    });
-
-    updateBuddy();
-}
-
-function updateBuddy() {
-    if (gameState.upgrades.buddy) {
-        gameState.buddies.forEach(buddy => {
-            if (buddy.isErratic) {
-                buddy.angle += (Math.random() - 0.5) * 0.5;
-                buddy.x += Math.cos(buddy.angle) * buddy.speed;
-                buddy.y += Math.sin(buddy.angle) * buddy.speed;
-                
-                if (buddy.x < 0 || buddy.x > canvas.width) buddy.angle = Math.PI - buddy.angle;
-                if (buddy.y < 0 || buddy.y > canvas.height) buddy.angle = -buddy.angle;
-            } else {
-                const time = Date.now() / 1000;
-                const offsetX = Math.sin(time) * 50;
-                const offsetY = Math.sin(time * 2) * 30;
-                buddy.x = player.x + offsetX;
-                buddy.y = player.y - 50 + offsetY;
-            }
-
-            if (Math.random() < 0.05) {
-                bullets.push({
-                    x: buddy.x + buddy.width / 2,
-                    y: buddy.y,
-                    speed: 8 * gameState.upgrades.speed,
-                    width: 8,
-                    height: 15,
-                    color: '#ffff90'
-                });
-            }
+  setTimeout(() => {
+    img.style.opacity = '0';
+    setTimeout(() => {
+      img.remove();
+      lastRainbowCatScore = 0;
+      rainbowCatActive = false;
+      rainbowCatX = -100;
+      startButtonSound.currentTime = 0;
+      startButtonSound.play();
+      difficultySound.currentTime = 0;
+      difficultySound.play();
+      
+      // Start background music
+      backgroundMusic.currentTime = 0;
+      backgroundMusic.play();
+      
+      gameState.difficulty = difficulty;
+      gameState.isPlaying = true;
+      mainMenu.style.display = 'none';
+      gameContainer.classList.add('playing');
+      gameLoop();
+      
+      // Reset cooldown after 5 seconds
+      setTimeout(() => {
+        gameState.difficultyButtonCooldown = false;
+        difficultyButtons.forEach(btn => {
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
         });
-    }
-}
+      }, 5000);
 
+      if (gameState.isFirstRound) {
+        setTimeout(() => {
+          showCharacterPopup('sewey.png', 'هل أنت مستعد؟', 2000);
+        }, 5000);
+
+        setTimeout(() => {
+          showCharacterPopup('messi.png', 'تقريباً هناك', 2000);
+        }, 12000);
+
+        setTimeout(() => {
+          showCharacterPopup('cat.png', 'أنت مستعد', 2000);
+        }, 17000);
+      }
+    }, 300);
+  }, 1000);
+}
+function openShop() {
+  clickSound.currentTime = 0;
+  clickSound.play();
+  shopMenu.style.display = 'block';
+}
+function closeShop() {
+  clickSound.currentTime = 0;
+  clickSound.play();
+  shopMenu.style.display = 'none';
+}
+function purchaseUpgrade(type) {
+  if (type === 'speed' && gameState.coins >= 100) {
+    gameState.coins -= 100;
+    gameState.upgrades.speed += 0.2;
+    purchaseSound.currentTime = 0;
+    purchaseSound.play();
+  } else if (type === 'shield' && gameState.coins >= 200) {
+    gameState.coins -= 200;
+    gameState.upgrades.shield = true;
+    gameState.shieldHealth = gameState.maxShieldHealth;
+    gameState.shieldOpacity = 1;
+    purchaseSound.currentTime = 0;
+    purchaseSound.play();
+  } else if (type === 'buddy' && gameState.coins >= 300) {
+    gameState.coins -= 300;
+    gameState.upgrades.buddy = true;
+    gameState.buddyCount++;
+    const newBuddy = {
+      x: player.x,
+      y: player.y,
+      width: 30,
+      height: 30,
+      color: '#ffff00',
+      angle: Math.random() * Math.PI * 2,
+      speed: 3,
+      mirrorOffset: gameState.buddyCount % 2 === 0 ? -1 : 1
+    };
+    gameState.buddies.push(newBuddy);
+    purchaseSound.currentTime = 0;
+    purchaseSound.play();
+  }
+  updateHUD();
+  difficultySound.currentTime = 0;
+  difficultySound.play();
+}
+function handleInput() {
+  window.onmousemove = e => {
+    const rect = canvas.getBoundingClientRect();
+    player.x = Math.max(0, Math.min(e.clientX - rect.left - player.width / 2, canvas.width - player.width));
+  };
+  window.onkeydown = e => {
+    if (e.code === 'Space') {
+      shoot();
+    }
+  };
+  canvas.onclick = () => shoot();
+}
+function shoot() {
+  if (!gameState.isPlaying || gameState.isPaused) return;
+  shootSound.currentTime = 0;
+  shootSound.play();
+  bullets.push({
+    x: player.x + player.width / 2,
+    y: player.y,
+    speed: 10 * gameState.upgrades.speed,
+    width: 12,
+    height: 20,
+    color: '#90ff90'
+  });
+}
+function spawnVirus() {
+  const now = Date.now();
+  const spawnRate = gameState.difficulty === 'easy' ? 1000 : gameState.difficulty === 'medium' ? 750 : 500;
+  if (now - lastSpawn >= spawnRate) {
+    const virusCount = gameState.difficulty === 'hard' ? 3 : 1;
+    for (let i = 0; i < virusCount; i++) {
+      const virusColors = ['#ff0000', '#ff69b4', '#4b0082', '#9400d3', '#00ff00', '#00ffff', '#ff8c00', '#ff1493', '#7fffd4', '#ffd700'];
+      const randomColor = virusColors[Math.floor(Math.random() * virusColors.length)];
+      viruses.push({
+        x: Math.random() * (canvas.width - 30),
+        y: -30,
+        width: 30,
+        height: 30,
+        speed: gameState.difficulty === 'easy' ? 2 : gameState.difficulty === 'medium' ? 3 : 4,
+        color: randomColor,
+        scale: 1
+      });
+    }
+    lastSpawn = now;
+  }
+}
+function update() {
+  if (gameState.isPaused) return;
+  if (gameState.score >= lastRainbowCatScore + 70) {
+    rainbowCatActive = true;
+    gameState.toastActive = true;
+    lastRainbowCatScore = gameState.score;
+    rainbowCatX = -200;
+    toastMonster.x = -100;
+    toastMonster.y = canvas.height / 2;
+    toastMonster.fadeLevel = 1;
+  }
+  if (rainbowCatActive) {
+    rainbowCatX += 7;
+    if (gameState.toastActive) {
+      const dx = rainbowCatX + 100 - (toastMonster.x + toastMonster.width / 2);
+      const dy = canvas.height / 2 - (toastMonster.y + toastMonster.height / 2);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 5) {
+        toastMonster.x += dx * 0.05;
+        toastMonster.y += dy * 0.05;
+      }
+    }
+    if (rainbowCatX > canvas.width + 200) {
+      rainbowCatActive = false;
+      gameState.toastActive = false;
+    }
+  }
+  spawnVirus();
+  updateCoins();
+  bullets = bullets.filter(bullet => {
+    bullet.y -= bullet.speed;
+    return bullet.y > 0;
+  });
+  viruses = viruses.filter(virus => {
+    virus.y += virus.speed;
+    virus.scale = 1 + Math.sin(Date.now() / 200) * 0.2;
+    const hitBullet = bullets.find(bullet => bullet.x < virus.x + virus.width && bullet.x + bullet.width > virus.x && bullet.y < virus.y + virus.height && bullet.y + bullet.height > virus.y);
+    if (hitBullet) {
+      createExplosion(virus.x, virus.y);
+      createVirusDebris(virus.x, virus.y, virus.color);
+      popSound.currentTime = 0;
+      popSound.play();
+      fallingCoins.push({
+        x: virus.x + virus.width / 2,
+        y: virus.y + virus.height / 2,
+        vy: 2,
+        rotation: 0,
+        scale: 1,
+        opacity: 1,
+        collected: false
+      });
+      gameState.score += 10;
+      bullets = bullets.filter(b => b !== hitBullet);
+      return false;
+    }
+    if (virus.y + virus.height > player.y && virus.x < player.x + player.width && virus.x + virus.width > player.x) {
+      if (gameState.upgrades.shield) {
+        gameState.shieldHealth--;
+        if (gameState.shieldHealth <= 0) {
+          gameState.upgrades.shield = false;
+        }
+        return false;
+      } else {
+        gameOver();
+      }
+      return false;
+    }
+    return virus.y < canvas.height;
+  });
+  updateBuddy();
+  debrisParticles = debrisParticles.filter(particle => {
+    particle.x += particle.vx;
+    particle.y += particle.vy;
+    particle.vy += 0.2;
+    particle.rotation += particle.rotationSpeed;
+    particle.alpha -= 0.02;
+    particle.size *= 0.95;
+    return particle.alpha > 0 && particle.size > 1;
+  });
+}
+function updateBuddy() {
+  if (gameState.upgrades.buddy) {
+    gameState.buddies.forEach((buddy, index) => {
+      const time = Date.now() / 1000;
+      const offsetX = Math.sin(time) * 50 * buddy.mirrorOffset;
+      const offsetY = Math.sin(time * 2) * 30;
+      buddy.x = player.x + offsetX;
+      buddy.y = player.y - 50 + offsetY;
+      if (Math.random() < 0.05) {
+        bullets.push({
+          x: buddy.x + buddy.width / 2,
+          y: buddy.y,
+          speed: 8 * gameState.upgrades.speed,
+          width: 8,
+          height: 15,
+          color: '#ffff90'
+        });
+      }
+    });
+  }
+}
+function updateCoins() {
+  fallingCoins = fallingCoins.filter(coin => {
+    if (coin.collected) return false;
+    coin.y += coin.vy;
+    coin.rotation += 0.1;
+    if (coin.y + 20 > player.y && coin.y < player.y + player.height && coin.x > player.x && coin.x < player.x + player.width) {
+      coin.collected = true;
+      coinSound.currentTime = 0;
+      coinSound.play();
+      gameState.coins += gameState.difficulty === 'easy' ? 10 : gameState.difficulty === 'medium' ? 20 : 30;
+      updateHUD();
+      return false;
+    }
+    return coin.y < canvas.height + 50;
+  });
+}
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.fillStyle = player.color;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawCoins();
+  ctx.fillStyle = player.color;
+  ctx.beginPath();
+  ctx.moveTo(player.x, player.y + player.height);
+  ctx.lineTo(player.x + player.width / 2, player.y);
+  ctx.lineTo(player.x + player.width, player.y + player.height);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#000814';
+  ctx.beginPath();
+  ctx.ellipse(player.x + player.width * 0.3, player.y + player.height * 0.4, 5, 8, Math.PI / 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(player.x + player.width * 0.7, player.y + player.height * 0.4, 5, 8, -Math.PI / 4, 0, Math.PI * 2);
+  ctx.fill();
+  bullets.forEach(bullet => {
+    const gradient = ctx.createRadialGradient(bullet.x, bullet.y, 0, bullet.x, bullet.y, bullet.width);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(0.4, bullet.color);
+    gradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.moveTo(player.x, player.y + player.height);
-    ctx.lineTo(player.x + player.width / 2, player.y);
-    ctx.lineTo(player.x + player.width, player.y + player.height);
+    ctx.arc(bullet.x, bullet.y, bullet.width, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = bullet.color;
+    ctx.fillRect(bullet.x - bullet.width / 2, bullet.y, bullet.width, bullet.height);
+  });
+  viruses.forEach(virus => {
+    const scale = virus.scale || 1;
+    const centerX = virus.x + virus.width / 2;
+    const centerY = virus.y + virus.height / 2;
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = virus.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, virus.width / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('*', 0, 0);
+    ctx.restore();
+  });
+  if (gameState.upgrades.shield) {
+    gameState.shieldOpacity = gameState.shieldHealth / gameState.maxShieldHealth * 0.8;
+    ctx.strokeStyle = `rgba(0, 255, 255, ${gameState.shieldOpacity})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width * 0.8, 0, Math.PI * 2);
+    ctx.stroke();
+    const gradient = ctx.createRadialGradient(player.x + player.width / 2, player.y + player.height / 2, player.width * 0.7, player.x + player.width / 2, player.y + player.height / 2, player.width * 0.8);
+    gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
+    gradient.addColorStop(1, `rgba(0, 255, 255, ${gameState.shieldOpacity * 0.3})`);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+  }
+  gameState.buddies.forEach(buddy => {
+    ctx.fillStyle = buddy.color;
+    ctx.beginPath();
+    ctx.moveTo(buddy.x, buddy.y + buddy.height);
+    ctx.lineTo(buddy.x + buddy.width / 2, buddy.y);
+    ctx.lineTo(buddy.x + buddy.width, buddy.y + buddy.height);
     ctx.closePath();
     ctx.fill();
-    
     ctx.fillStyle = '#000814';
     ctx.beginPath();
-    ctx.ellipse(player.x + player.width * 0.3, player.y + player.height * 0.4, 5, 8, Math.PI / 4, 0, Math.PI * 2);
+    ctx.ellipse(buddy.x + buddy.width * 0.3, buddy.y + buddy.height * 0.4, 3, 5, Math.PI / 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(player.x + player.width * 0.7, player.y + player.height * 0.4, 5, 8, -Math.PI / 4, 0, Math.PI * 2);
+    ctx.ellipse(buddy.x + buddy.width * 0.7, buddy.y + buddy.height * 0.4, 3, 5, -Math.PI / 4, 0, Math.PI * 2);
     ctx.fill();
-    
-    bullets.forEach(bullet => {
-        const gradient = ctx.createRadialGradient(
-            bullet.x, bullet.y, 0,
-            bullet.x, bullet.y, bullet.width
-        );
-        gradient.addColorStop(0, '#ffffff');
-        gradient.addColorStop(0.4, bullet.color);
-        gradient.addColorStop(1, 'transparent');
-        
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(bullet.x, bullet.y, bullet.width, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = bullet.color;
-        ctx.fillRect(bullet.x - bullet.width / 2, bullet.y, bullet.width, bullet.height);
+  });
+  debrisParticles.forEach(particle => {
+    ctx.save();
+    ctx.translate(particle.x, particle.y);
+    ctx.rotate(particle.rotation);
+    ctx.globalAlpha = particle.alpha;
+    ctx.fillStyle = particle.color;
+    ctx.beginPath();
+    ctx.moveTo(-particle.size / 2, -particle.size / 2);
+    ctx.lineTo(particle.size / 2, 0);
+    ctx.lineTo(-particle.size / 2, particle.size / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
+  if (gameState.toastActive) {
+    ctx.save();
+    ctx.globalAlpha = toastMonster.fadeLevel;
+    const toastImage = new Image();
+    toastImage.src = 'Tooots.png';
+    ctx.drawImage(toastImage, toastMonster.x, toastMonster.y, toastMonster.width, toastMonster.height);
+    ctx.strokeStyle = toastMonster.color;
+    ctx.lineWidth = 2;
+    toastMonster.targetedViruses.forEach(target => {
+      ctx.beginPath();
+      ctx.moveTo(toastMonster.x + toastMonster.width / 2, toastMonster.y + toastMonster.height / 2);
+      ctx.lineTo(target.x + target.width / 2, target.y + target.height / 2);
+      ctx.stroke();
     });
-    
-    viruses.forEach(virus => {
-        const scale = virus.scale || 1;
-        const centerX = virus.x + virus.width / 2;
-        const centerY = virus.y + virus.height / 2;
-        
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.scale(scale, scale);
-        
-        ctx.fillStyle = virus.type === 'pink' ? 'pink' : '#ff0000';
-        ctx.beginPath();
-        ctx.arc(0, 0, virus.width / 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('*', 0, 0);
-        
-        ctx.restore();
-    });
-
-    if (gameState.upgrades.shield) {
-        gameState.shieldOpacity = (gameState.shieldHealth / gameState.maxShieldHealth) * 0.8;
-        ctx.strokeStyle = `rgba(0, 255, 255, ${gameState.shieldOpacity})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(player.x + player.width/2, player.y + player.height/2, 
-                player.width * 0.8, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        const gradient = ctx.createRadialGradient(
-            player.x + player.width/2, player.y + player.height/2, player.width * 0.7,
-            player.x + player.width/2, player.y + player.height/2, player.width * 0.8
-        );
-        gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
-        gradient.addColorStop(1, `rgba(0, 255, 255, ${gameState.shieldOpacity * 0.3})`);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-    }
-
-    gameState.buddies.forEach(buddy => {
-        ctx.fillStyle = buddy.color;
-        ctx.beginPath();
-        ctx.moveTo(buddy.x, buddy.y + buddy.height);
-        ctx.lineTo(buddy.x + buddy.width / 2, buddy.y);
-        ctx.lineTo(buddy.x + buddy.width, buddy.y + buddy.height);
-        ctx.closePath();
-        ctx.fill();
-        
-        ctx.fillStyle = '#000814';
-        ctx.beginPath();
-        ctx.ellipse(buddy.x + buddy.width * 0.3, buddy.y + buddy.height * 0.4, 3, 5, Math.PI / 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(buddy.x + buddy.width * 0.7, buddy.y + buddy.height * 0.4, 3, 5, -Math.PI / 4, 0, Math.PI * 2);
-        ctx.fill();
-    });
+    ctx.restore();
+  }
+  if (rainbowCatActive) {
+    ctx.drawImage(rainbowCat, rainbowCatX, canvas.height / 2 - 100, 200, 200);
+  }
 }
-
+function drawCoins() {
+  fallingCoins.forEach(coin => {
+    ctx.save();
+    ctx.translate(coin.x, coin.y);
+    ctx.rotate(coin.rotation);
+    const gradient = ctx.createRadialGradient(0, 0, 10, 0, 0, 30);
+    gradient.addColorStop(0, 'rgba(255, 215, 0, 0.3)');
+    gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.drawImage(coinImage, -15, -15, 30, 30);
+    ctx.restore();
+  });
+}
 function updateHUD() {
-    document.getElementById('score').textContent = gameState.score;
-    document.getElementById('coins').textContent = gameState.coins;
+  document.getElementById('score').textContent = gameState.score;
+  document.getElementById('coins').textContent = gameState.coins;
 }
-
 function gameOver() {
-    gameState.isPlaying = false;
-    mainMenu.style.display = 'flex';
-    gameContainer.classList.remove('playing');
-    bullets = [];
-    viruses = [];
-    gameState.buddies = [];
-    gameState.buddyCount = 0;
+  gameState.isPlaying = false;
+  fallingCoins = [];
+  
+  // Stop background music
+  backgroundMusic.pause();
+  
+  const jumpscare = document.querySelector('.jumpscare');
+  deathSound.currentTime = 0;
+  deathSound.play();
+  jumpscare.style.display = 'flex';
+  jumpscare.style.background = '#ff0000';
+  const scaryFace = document.querySelector('.scary-face');
+  scaryFace.style.fontSize = '200px';
+  scaryFace.style.textShadow = '0 0 30px #ff0000, 0 0 60px #ff0000';
+  setTimeout(() => {
+    jumpscare.style.display = 'none';
+    deathScreen.style.display = 'flex';
+    deathScreen.style.background = 'rgba(255, 0, 0, 0.3)';
+    deathScreen.onclick = () => {
+      deathScreen.style.display = 'none';
+      mainMenu.style.display = 'flex';
+      gameContainer.classList.remove('playing');
+      bullets = [];
+      viruses = [];
+      gameState.buddies = [];
+      gameState.buddyCount = 0;
+      gameState.score = 0;
+      gameState.coins = 0;
+      gameState.isFirstRound = false;
+      gameState.upgrades = {
+        speed: 1,
+        shield: false,
+        buddy: false
+      };
+      updateHUD();
+    };
+  }, 300);
 }
-
-function togglePause() {
-    gameState.isPaused = !gameState.isPaused;
-    if (!gameState.isPaused) {
-        gameLoop();
-    }
+function createExplosion(x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+  for (let i = 0; i < 12; i++) {
+    const angle = i / 12 * Math.PI * 2;
+    const dx = Math.cos(angle) * 30;
+    const dy = Math.sin(angle) * 30;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(dx, dy);
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+  const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 40);
+  gradient.addColorStop(0, 'rgba(255, 0, 0, 0.8)');
+  gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, 40, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
-
-function gameLoop() {
-    if (!gameState.isPlaying || gameState.isPaused) return;
-    
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-handleInput();
-<script>
-let areas = [
-    { name: "Area 1", unlocked: true, cost: 0 },
-    { name: "Area 2", unlocked: false, cost: 500 },
-    { name: "Area 3", unlocked: false, cost: 1500 },
-];
-
-let pets = [];
-let rebirths = 0;
-
-function addPet() {
-    if (gameState.coins >= 1000) {
-        gameState.coins -= 1000;
-        const petMultiplier = 1 + pets.length * 0.5;
-        pets.push({ name: `Pet ${pets.length + 1}`, multiplier: petMultiplier });
-
-        const petMessage = document.createElement('div');
-        petMessage.innerText = `You hatched a Pet with x${petMultiplier} multiplier!`;
-        petMessage.style.cssText = "color: yellow; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);";
-        document.body.appendChild(petMessage);
-        setTimeout(() => petMessage.remove(), 3000);
-
-        updateHUD();
-    } else {
-        alert("Not enough coins to hatch a pet!");
-    }
-}
-
-function applyPetMultipliers() {
-    const totalMultiplier = pets.reduce((acc, pet) => acc + pet.multiplier, 1);
-    return totalMultiplier;
-}
-
-function rebirth() {
-    if (gameState.coins >= 5000) {
-        gameState.coins = 0;
-        gameState.score = 0;
-        gameState.upgrades = { speed: 1, shield: false, buddy: false };
-        pets = [];
-        rebirths++;
-        alert(`Rebirth complete! Total rebirths: ${rebirths}`);
-        updateHUD();
-    } else {
-        alert("Not enough coins for rebirth!");
-    }
-}
-
-function unlockArea(areaIndex) {
-    const area = areas[areaIndex];
-    if (gameState.coins >= area.cost && !area.unlocked) {
-        gameState.coins -= area.cost;
-        area.unlocked = true;
-        alert(`${area.name} unlocked!`);
-        updateHUD();
-    } else if (area.unlocked) {
-        alert(`${area.name} is already unlocked!`);
-    } else {
-        alert("Not enough coins to unlock this area!");
-    }
-}
-
-function updateHUD() {
-    document.getElementById("score").innerText = gameState.score;
-    document.getElementById("coins").innerText = gameState.coins;
-    document.getElementById("rebirths").innerText = rebirths;
-}
-
-function renderAreas() {
-    const hud = document.getElementById('hud');
-    areas.forEach((area, index) => {
-        const areaButton = document.createElement('button');
-        areaButton.innerText = area.unlocked ? `${area.name} (Unlocked)` : `${area.name} (Unlock: ${area.cost} Coins)`;
-        areaButton.onclick = () => unlockArea(index);
-        hud.appendChild(areaButton);
+function createVirusDebris(x, y, color) {
+  for (let i = 0; i < 8; i++) {
+    const angle = Math.PI * 2 / 8 * i;
+    debrisParticles.push({
+      x: x,
+      y: y,
+      vx: Math.cos(angle) * 3,
+      vy: Math.sin(angle) * 3 + 2,
+      size: 10,
+      rotation: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.2,
+      color: color,
+      alpha: 1
     });
+  }
 }
-
-// Call this function in the initialization section.
-function initializeGame() {
-    renderAreas();
-    handleInput();
-    resizeCanvas();
+function togglePause() {
+  gameState.isPaused = !gameState.isPaused;
+  if (gameState.isPaused) {
+    pauseSound.currentTime = 0;
+    pauseSound.play();
+    backgroundMusic.pause(); // Pause music when game is paused
+  } else {
+    unpauseSound.currentTime = 0;
+    unpauseSound.play();
+    backgroundMusic.play(); // Resume music when unpaused
+    gameLoop();
+  }
 }
-initializeGame();
-<span>Rebirths: <span id="rebirths">0</span></span>
-<button onclick="addPet()">Hatch a Pet (1000 Coins)</button>
+function gameLoop() {
+  if (!gameState.isPlaying || gameState.isPaused) return;
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+function showCharacterPopup(character, message, duration) {
+  const popup = document.createElement('div');
+  popup.className = 'character-popup';
+  
+  const img = document.createElement('img');
+  img.src = character;
+  
+  const text = document.createElement('div');
+  text.className = 'message';
+  text.textContent = message;
+  
+  popup.appendChild(img);
+  popup.appendChild(text);
+  document.body.appendChild(popup);
 
+  setTimeout(() => {
+    popup.style.animation = 'popOut 0.5s ease-in forwards';
+    setTimeout(() => popup.remove(), 500);
+  }, duration);
+}
+handleInput();
+function startGame(difficulty) {
+  if (gameState.difficultyButtonCooldown) {
+    return; // Exit if buttons are on cooldown
+  }
+  
+  // Set cooldown
+  gameState.difficultyButtonCooldown = true;
+  
+  // Disable all difficulty buttons visually
+  const difficultyButtons = document.querySelectorAll('.laser-button');
+  difficultyButtons.forEach(btn => {
+    btn.style.opacity = '0.5';
+    btn.style.pointerEvents = 'none';
+  });
+
+  const imageMap = {
+    'easy': 'COUUUUUUUTE.webp',
+    'medium': 'mid.webp',
+    'hard': 'scared.webp'
+  };
+
+  const img = document.createElement('img');
+  img.src = imageMap[difficulty];
+  img.className = 'difficulty-image';
+  img.style.opacity = '0';
+  document.body.appendChild(img);
+  
+  setTimeout(() => {
+    img.style.opacity = '1';
+  }, 10);
+
+  setTimeout(() => {
+    img.style.opacity = '0';
+    setTimeout(() => {
+      img.remove();
+      lastRainbowCatScore = 0;
+      rainbowCatActive = false;
+      rainbowCatX = -100;
+      startButtonSound.currentTime = 0;
+      startButtonSound.play();
+      difficultySound.currentTime = 0;
+      difficultySound.play();
+      
+      // Start background music
+      backgroundMusic.currentTime = 0;
+      backgroundMusic.play();
+      
+      gameState.difficulty = difficulty;
+      gameState.isPlaying = true;
+      mainMenu.style.display = 'none';
+      gameContainer.classList.add('playing');
+      gameLoop();
+      
+      // Reset cooldown after 5 seconds
+      setTimeout(() => {
+        gameState.difficultyButtonCooldown = false;
+        difficultyButtons.forEach(btn => {
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
+        });
+      }, 5000);
+
+      if (gameState.isFirstRound) {
+        setTimeout(() => {
+          showCharacterPopup('sewey.png', 'هل أنت مستعد؟', 2000);
+        }, 5000);
+
+        setTimeout(() => {
+          showCharacterPopup('messi.png', 'تقريباً هناك', 2000);
+        }, 12000);
+
+        setTimeout(() => {
+          showCharacterPopup('cat.png', 'أنت مستعد', 2000);
+        }, 17000);
+      }
+    }, 300);
+  }, 1000);
+}
+</script>
+</body></html>
