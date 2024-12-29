@@ -1,6 +1,6 @@
 <html><head><base href=".">
 <meta charset="UTF-8">
-<title>مكافحة الفيروسات</title>
+<title>&#x645;&#x643;&#x627;&#x641;&#x62d;&#x629; &#x627;&#x644;&#x641;&#x64a;&#x631;&#x648;&#x633;&#x627;&#x62a;</title>
 <style>
 :root {
   --primary: #2196f3;
@@ -358,51 +358,120 @@ body::before {
   0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
 }
+
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 10px;
+    max-width: 700px;
+    margin: 20px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.level-button {
+    padding: 15px;
+    background: rgba(0, 255, 0, 0.05);
+    border: 2px solid #00ff00;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.level-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #666;
+}
+
+.level-button:not(:disabled)::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid transparent;
+    border-radius: 5px;
+    animation: outlineTracer 2s linear infinite;
+}
+
+.level-button:hover:not(:disabled) {
+    background: rgba(0, 255, 0, 0.1);
+    transform: scale(1.05);
+}
 </style>
 </head>
 <body>
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     <div id="hud">
-       النقاط: <span id="score">0</span>
-        العملات: <span id="coins">0</span>
-        <span class="shop-icon" onclick="openShop()">&#x1f6cd;&#xfe0f; المتجر</span>
+       &#x627;&#x644;&#x646;&#x642;&#x627;&#x637;: <span id="score">0</span>
+        &#x627;&#x644;&#x639;&#x645;&#x644;&#x627;&#x62a;: <span id="coins">0</span>
+        <span class="shop-icon" onclick="openShop()">&#x1f6cd;&#xfe0f; &#x627;&#x644;&#x645;&#x62a;&#x62c;&#x631;</span>
     </div>
-    <button id="pauseButton" onclick="togglePause()">&#x23f8;&#xfe0f; إيقاف مؤقت</button>
+    <button id="pauseButton" onclick="togglePause()">&#x23f8;&#xfe0f; &#x625;&#x64a;&#x642;&#x627;&#x641; &#x645;&#x624;&#x642;&#x62a;</button>
     <div id="mainMenu" class="menu">
         <h1>
-            مكافحة الفيروسات
+            &#x645;&#x643;&#x627;&#x641;&#x62d;&#x629; &#x627;&#x644;&#x641;&#x64a;&#x631;&#x648;&#x633;&#x627;&#x62a;
             <img src="bloeh.png" style="width: 50px; height: 50px; vertical-align: middle; margin: 0 10px;">
         </h1>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <button class="laser-button" onclick="startGame('easy')">سهل</button>
+            <button class="laser-button" onclick="showGameModes()">&#x627;&#x644;&#x645;&#x633;&#x62a;&#x648;&#x64a;&#x627;&#x62a;</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="laser-button" onclick="showOpenWorld()">&#x639;&#x627;&#x644;&#x645; &#x645;&#x641;&#x62a;&#x648;&#x62d;</button>
+        </div>
+    </div>
+    <div id="levelMenu" class="menu" style="display: none;">
+        <h2>&#x627;&#x644;&#x645;&#x633;&#x62a;&#x648;&#x64a;&#x627;&#x62a;</h2>
+        <div id="levelButtons" class="level-grid">
+            <!-- Levels will be populated dynamically -->
+        </div>
+        <button class="laser-button" onclick="backToMainMenu()">&#x631;&#x62c;&#x648;&#x639;</button>
+    </div>
+    <div id="difficultyMenu" class="menu" style="display: none;">
+        <h2>&#x639;&#x627;&#x644;&#x645; &#x645;&#x641;&#x62a;&#x648;&#x62d;</h2>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="laser-button" onclick="startGame(&apos;easy&apos;)">&#x633;&#x647;&#x644;</button>
             <img src="COUUUUUUUTE.webp" style="width: 40px; height: 40px; vertical-align: middle;">
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <button class="laser-button" onclick="startGame('medium')">متوسط</button>
+            <button class="laser-button" onclick="startGame(&apos;medium&apos;)">&#x645;&#x62a;&#x648;&#x633;&#x637;</button>
             <img src="mid.webp" style="width: 40px; height: 40px; vertical-align: middle;">
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <button class="laser-button" onclick="startGame('hard')">صعب</button>
+            <button class="laser-button" onclick="startGame(&apos;hard&apos;)">&#x635;&#x639;&#x628;</button>
             <img src="scared.webp" style="width: 40px; height: 40px; vertical-align: middle;">
         </div>
+        <button class="laser-button" onclick="backToMainMenu()">&#x631;&#x62c;&#x648;&#x639;</button>
+    </div>
+    <div id="levelComplete" class="menu" style="display: none;">
+        <h2>!&#x645;&#x633;&#x62a;&#x648;&#x649; &#x645;&#x643;&#x62a;&#x645;&#x644;</h2>
+        <p>&#x627;&#x644;&#x648;&#x642;&#x62a;: <span id="levelTime">0:00</span></p>
+        <button class="laser-button" onclick="startNextLevel()">&#x627;&#x644;&#x645;&#x633;&#x62a;&#x648;&#x649; &#x627;&#x644;&#x62a;&#x627;&#x644;&#x64a;</button>
+        <button class="laser-button" onclick="backToMainMenu()">&#x627;&#x644;&#x642;&#x627;&#x626;&#x645;&#x629; &#x627;&#x644;&#x631;&#x626;&#x64a;&#x633;&#x64a;&#x629;</button>
     </div>
     <div id="shopMenu">
-        <h2>المتجر</h2>
-        <div class="upgrade" onclick="purchaseUpgrade('speed')">
-            السرعة (100 عملة)
+        <h2>&#x627;&#x644;&#x645;&#x62a;&#x62c;&#x631;</h2>
+        <div class="upgrade" onclick="purchaseUpgrade(&apos;speed&apos;)">
+            &#x627;&#x644;&#x633;&#x631;&#x639;&#x629; (100 &#x639;&#x645;&#x644;&#x629;)
         </div>
-        <div class="upgrade" onclick="purchaseUpgrade('shield')">
-            الدرع (200 عملة)  
+        <div class="upgrade" onclick="purchaseUpgrade(&apos;shield&apos;)">
+            &#x627;&#x644;&#x62f;&#x631;&#x639; (200 &#x639;&#x645;&#x644;&#x629;)  
         </div>
-        <div class="upgrade" onclick="purchaseUpgrade('buddy')">
-            المساعد (300 عملة)
+        <div class="upgrade" onclick="purchaseUpgrade(&apos;buddy&apos;)">
+            &#x627;&#x644;&#x645;&#x633;&#x627;&#x639;&#x62f; (300 &#x639;&#x645;&#x644;&#x629;)
         </div>
-        <button class="laser-button" onclick="closeShop()">عودة</button>
+        <button class="laser-button" onclick="closeShop()">&#x639;&#x648;&#x62f;&#x629;</button>
     </div>
 </div>
 <div id="deathScreen" class="death-screen">
-  <div class="death-toast">لقد خسرت!</div>
+  <div class="death-toast">&#x644;&#x642;&#x62f; &#x62e;&#x633;&#x631;&#x62a;!</div>
 </div>
 <div class="jumpscare">
   <div class="scary-face">&#x1f47b;</div>
@@ -420,11 +489,18 @@ const deathScreen = document.getElementById('deathScreen');
 let backgroundMusic = document.getElementById('backgroundMusic');
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.3;
+const levelCompleteSound = new Audio('LevelDone.mp3');
+let currentLevel = 1;
+let maxUnlockedLevel = 1;
+let levelStartTime = 0;
+let levelMenu = document.getElementById('levelMenu');
+let difficultyMenu = document.getElementById('difficultyMenu');
+let levelComplete = document.getElementById('levelComplete');
 let gameState = {
   score: 0,
   coins: 0,
   isPlaying: false,
-  difficulty: 'easy',
+  difficulty: null,
   isPaused: false,
   shieldHealth: 2,
   maxShieldHealth: 2,
@@ -448,7 +524,7 @@ coinImage.src = 'Coin.png';
 const coinSound = new Audio('CoinRecieved.mp3');
 const deathSound = new Audio('ELODeath.wav');
 const popSound = new Audio('Pop.mp3');
-const difficultySound = new Audio('Start.wav');
+const difficultySound = new Audio('3506d0ac-c65a-4039-bfb4-d82001d557a5.wav');
 const shootSound = new Audio('Shoot.mp3');
 const clickSound = new Audio('Click.mp3');
 const startButtonSound = new Audio('Start.wav');
@@ -488,84 +564,6 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
-function startGame(difficulty) {
-  if (gameState.difficultyButtonCooldown) {
-    return; // Exit if buttons are on cooldown
-  }
-  
-  // Set cooldown
-  gameState.difficultyButtonCooldown = true;
-  
-  // Disable all difficulty buttons visually
-  const difficultyButtons = document.querySelectorAll('.laser-button');
-  difficultyButtons.forEach(btn => {
-    btn.style.opacity = '0.5';
-    btn.style.pointerEvents = 'none';
-  });
-
-  const imageMap = {
-    'easy': 'COUUUUUUUTE.webp',
-    'medium': 'mid.webp',
-    'hard': 'scared.webp'
-  };
-
-  const img = document.createElement('img');
-  img.src = imageMap[difficulty];
-  img.className = 'difficulty-image';
-  img.style.opacity = '0';
-  document.body.appendChild(img);
-  
-  setTimeout(() => {
-    img.style.opacity = '1';
-  }, 10);
-
-  setTimeout(() => {
-    img.style.opacity = '0';
-    setTimeout(() => {
-      img.remove();
-      lastRainbowCatScore = 0;
-      rainbowCatActive = false;
-      rainbowCatX = -100;
-      startButtonSound.currentTime = 0;
-      startButtonSound.play();
-      difficultySound.currentTime = 0;
-      difficultySound.play();
-      
-      // Start background music
-      backgroundMusic.currentTime = 0;
-      backgroundMusic.play();
-      
-      gameState.difficulty = difficulty;
-      gameState.isPlaying = true;
-      mainMenu.style.display = 'none';
-      gameContainer.classList.add('playing');
-      gameLoop();
-      
-      // Reset cooldown after 5 seconds
-      setTimeout(() => {
-        gameState.difficultyButtonCooldown = false;
-        difficultyButtons.forEach(btn => {
-          btn.style.opacity = '1';
-          btn.style.pointerEvents = 'auto';
-        });
-      }, 5000);
-
-      if (gameState.isFirstRound) {
-        setTimeout(() => {
-          showCharacterPopup('sewey.png', 'هل أنت مستعد؟', 2000);
-        }, 5000);
-
-        setTimeout(() => {
-          showCharacterPopup('messi.png', 'تقريباً هناك', 2000);
-        }, 12000);
-
-        setTimeout(() => {
-          showCharacterPopup('cat.png', 'أنت مستعد', 2000);
-        }, 17000);
-      }
-    }, 300);
-  }, 1000);
-}
 function openShop() {
   clickSound.currentTime = 0;
   clickSound.play();
@@ -658,6 +656,9 @@ function spawnVirus() {
   }
 }
 function update() {
+  if (!gameState.difficulty) {
+    checkLevelComplete();
+  }
   if (gameState.isPaused) return;
   if (gameState.score >= lastRainbowCatScore + 70) {
     rainbowCatActive = true;
@@ -907,41 +908,49 @@ function updateHUD() {
 function gameOver() {
   gameState.isPlaying = false;
   fallingCoins = [];
-  
-  // Stop background music
   backgroundMusic.pause();
-  
-  const jumpscare = document.querySelector('.jumpscare');
-  deathSound.currentTime = 0;
-  deathSound.play();
-  jumpscare.style.display = 'flex';
-  jumpscare.style.background = '#ff0000';
-  const scaryFace = document.querySelector('.scary-face');
-  scaryFace.style.fontSize = '200px';
-  scaryFace.style.textShadow = '0 0 30px #ff0000, 0 0 60px #ff0000';
-  setTimeout(() => {
-    jumpscare.style.display = 'none';
+  if (!gameState.difficulty) {
     deathScreen.style.display = 'flex';
     deathScreen.style.background = 'rgba(255, 0, 0, 0.3)';
     deathScreen.onclick = () => {
       deathScreen.style.display = 'none';
-      mainMenu.style.display = 'flex';
+      levelMenu.style.display = 'flex';
       gameContainer.classList.remove('playing');
-      bullets = [];
-      viruses = [];
-      gameState.buddies = [];
-      gameState.buddyCount = 0;
-      gameState.score = 0;
-      gameState.coins = 0;
-      gameState.isFirstRound = false;
-      gameState.upgrades = {
-        speed: 1,
-        shield: false,
-        buddy: false
-      };
-      updateHUD();
+      resetGameState();
     };
-  }, 300);
+  } else {
+    const jumpscare = document.querySelector('.jumpscare');
+    deathSound.currentTime = 0;
+    deathSound.play();
+    jumpscare.style.display = 'flex';
+    jumpscare.style.background = '#ff0000';
+    const scaryFace = document.querySelector('.scary-face');
+    scaryFace.style.fontSize = '200px';
+    scaryFace.style.textShadow = '0 0 30px #ff0000, 0 0 60px #ff0000';
+    setTimeout(() => {
+      jumpscare.style.display = 'none';
+      deathScreen.style.display = 'flex';
+      deathScreen.style.background = 'rgba(255, 0, 0, 0.3)';
+      deathScreen.onclick = () => {
+        deathScreen.style.display = 'none';
+        mainMenu.style.display = 'flex';
+        gameContainer.classList.remove('playing');
+        bullets = [];
+        viruses = [];
+        gameState.buddies = [];
+        gameState.buddyCount = 0;
+        gameState.score = 0;
+        gameState.coins = 0;
+        gameState.isFirstRound = false;
+        gameState.upgrades = {
+          speed: 1,
+          shield: false,
+          buddy: false
+        };
+        updateHUD();
+      };
+    }, 300);
+  }
 }
 function createExplosion(x, y) {
   ctx.save();
@@ -987,11 +996,11 @@ function togglePause() {
   if (gameState.isPaused) {
     pauseSound.currentTime = 0;
     pauseSound.play();
-    backgroundMusic.pause(); // Pause music when game is paused
+    backgroundMusic.pause();
   } else {
     unpauseSound.currentTime = 0;
     unpauseSound.play();
-    backgroundMusic.play(); // Resume music when unpaused
+    backgroundMusic.play();
     gameLoop();
   }
 }
@@ -1004,55 +1013,138 @@ function gameLoop() {
 function showCharacterPopup(character, message, duration) {
   const popup = document.createElement('div');
   popup.className = 'character-popup';
-  
   const img = document.createElement('img');
   img.src = character;
-  
   const text = document.createElement('div');
   text.className = 'message';
   text.textContent = message;
-  
   popup.appendChild(img);
   popup.appendChild(text);
   document.body.appendChild(popup);
-
   setTimeout(() => {
     popup.style.animation = 'popOut 0.5s ease-in forwards';
     setTimeout(() => popup.remove(), 500);
   }, duration);
 }
+function showGameModes() {
+  clickSound.currentTime = 0;
+  clickSound.play();
+  mainMenu.style.display = 'none';
+  levelMenu.style.display = 'flex';
+  populateLevelButtons();
+}
+function showOpenWorld() {
+  clickSound.currentTime = 0;
+  clickSound.play();
+  mainMenu.style.display = 'none';
+  difficultyMenu.style.display = 'flex';
+  const difficultyButtons = document.querySelectorAll('.laser-button');
+  difficultyButtons.forEach(btn => {
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  });
+  gameState.difficultyButtonCooldown = false;
+}
+function backToMainMenu() {
+  clickSound.currentTime = 0;
+  clickSound.play();
+  levelMenu.style.display = 'none';
+  difficultyMenu.style.display = 'none';
+  levelComplete.style.display = 'none';
+  mainMenu.style.display = 'flex';
+}
+function populateLevelButtons() {
+  const container = document.getElementById('levelButtons');
+  container.innerHTML = '';
+  for (let i = 1; i <= 50; i++) {
+    const button = document.createElement('button');
+    button.className = 'level-button';
+    button.textContent = i;
+    button.disabled = i > maxUnlockedLevel;
+    button.onclick = () => startLevel(i);
+    container.appendChild(button);
+  }
+}
+function startLevel(level) {
+  clickSound.currentTime = 0;
+  clickSound.play();
+  currentLevel = level;
+  gameState.isPlaying = true;
+  levelMenu.style.display = 'none';
+  gameContainer.classList.add('playing');
+  gameState.score = 0;
+  gameState.coins = 0;
+  levelStartTime = Date.now();
+  gameLoop();
+  backgroundMusic.currentTime = 0;
+  backgroundMusic.play();
+}
+function checkLevelComplete() {
+  const requiredScore = currentLevel * 100;
+  if (gameState.score >= requiredScore) {
+    levelCompleteSound.currentTime = 0;
+    levelCompleteSound.play();
+    const timeElapsed = Math.floor((Date.now() - levelStartTime) / 1000);
+    const minutes = Math.floor(timeElapsed / 60);
+    const seconds = timeElapsed % 60;
+    document.getElementById('levelTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    if (currentLevel === maxUnlockedLevel) {
+      maxUnlockedLevel = Math.min(50, maxUnlockedLevel + 1);
+    }
+    gameState.isPlaying = false;
+    levelComplete.style.display = 'flex';
+    backgroundMusic.pause();
+  }
+}
+function startNextLevel() {
+  clickSound.currentTime = 0;
+  clickSound.play();
+  levelComplete.style.display = 'none';
+  if (currentLevel < 50) {
+    startLevel(currentLevel + 1);
+  } else {
+    backToMainMenu();
+  }
+}
+function resetGameState() {
+  bullets = [];
+  viruses = [];
+  gameState.buddies = [];
+  gameState.buddyCount = 0;
+  gameState.score = 0;
+  gameState.coins = 0;
+  gameState.difficulty = null;
+  gameState.upgrades = {
+    speed: 1,
+    shield: false,
+    buddy: false
+  };
+  updateHUD();
+}
 handleInput();
 function startGame(difficulty) {
   if (gameState.difficultyButtonCooldown) {
-    return; // Exit if buttons are on cooldown
+    return;
   }
-  
-  // Set cooldown
   gameState.difficultyButtonCooldown = true;
-  
-  // Disable all difficulty buttons visually
   const difficultyButtons = document.querySelectorAll('.laser-button');
   difficultyButtons.forEach(btn => {
     btn.style.opacity = '0.5';
     btn.style.pointerEvents = 'none';
   });
-
   const imageMap = {
     'easy': 'COUUUUUUUTE.webp',
     'medium': 'mid.webp',
     'hard': 'scared.webp'
   };
-
   const img = document.createElement('img');
   img.src = imageMap[difficulty];
   img.className = 'difficulty-image';
   img.style.opacity = '0';
   document.body.appendChild(img);
-  
   setTimeout(() => {
     img.style.opacity = '1';
   }, 10);
-
   setTimeout(() => {
     img.style.opacity = '0';
     setTimeout(() => {
@@ -1064,18 +1156,13 @@ function startGame(difficulty) {
       startButtonSound.play();
       difficultySound.currentTime = 0;
       difficultySound.play();
-      
-      // Start background music
       backgroundMusic.currentTime = 0;
       backgroundMusic.play();
-      
       gameState.difficulty = difficulty;
       gameState.isPlaying = true;
-      mainMenu.style.display = 'none';
+      difficultyMenu.style.display = 'none';
       gameContainer.classList.add('playing');
       gameLoop();
-      
-      // Reset cooldown after 5 seconds
       setTimeout(() => {
         gameState.difficultyButtonCooldown = false;
         difficultyButtons.forEach(btn => {
@@ -1083,22 +1170,18 @@ function startGame(difficulty) {
           btn.style.pointerEvents = 'auto';
         });
       }, 5000);
-
       if (gameState.isFirstRound) {
         setTimeout(() => {
           showCharacterPopup('sewey.png', 'هل أنت مستعد؟', 2000);
         }, 5000);
-
         setTimeout(() => {
           showCharacterPopup('messi.png', 'تقريباً هناك', 2000);
         }, 12000);
-
         setTimeout(() => {
           showCharacterPopup('cat.png', 'أنت مستعد', 2000);
         }, 17000);
       }
     }, 300);
   }, 1000);
-}
-</script>
+}</script>
 </body></html>
